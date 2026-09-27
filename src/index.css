@@ -1,0 +1,553 @@
+/* ==========================================================================
+   NYAYAVAULT DESIGN SYSTEM — JUDICIAL & EVIDENCE WORKSPACE SPECIFICATION
+   Visual Fidelity: 100% faithful to reference images (Cinematic Landing & Authenticated App)
+   ========================================================================== */
+
+:root {
+  /* Brand & Judicial Metallic Accents */
+  --gold-primary: #C59A45;
+  --gold-light: #E0BA68;
+  --gold-deep: #A37A2C;
+  --gold-glow: rgba(197, 154, 69, 0.25);
+  --gold-subtle: rgba(197, 154, 69, 0.12);
+  --gold-border: rgba(197, 154, 69, 0.3);
+
+  /* Dark Sovereign Surfaces */
+  --bg-deep-void: #07090D;
+  --bg-canvas: #0B0E14;
+  --bg-surface: #10141D;
+  --bg-surface-elevated: #161C28;
+  --bg-surface-hover: #1C2433;
+  --bg-input: #0E121A;
+
+  /* Document & Archival Parchment */
+  --parchment-base: #F5F1E8;
+  --parchment-sheet: #FCFAF6;
+  --parchment-border: #DCD4C4;
+  --parchment-ink: #14171A;
+  --parchment-muted: #5A5D60;
+
+  /* Provenance & Alert Tones */
+  --status-verified: #10B981;
+  --status-verified-bg: rgba(16, 185, 129, 0.12);
+  --status-verified-border: rgba(16, 185, 129, 0.35);
+
+  --status-tampered: #EF4444;
+  --status-tampered-bg: rgba(239, 68, 68, 0.12);
+  --status-tampered-border: rgba(239, 68, 68, 0.35);
+
+  --status-pending: #F59E0B;
+  --status-pending-bg: rgba(245, 158, 11, 0.12);
+  --status-pending-border: rgba(245, 158, 11, 0.35);
+
+  --status-bns: #EC4899;
+  --status-bns-bg: rgba(236, 72, 153, 0.12);
+
+  /* Typography Colors */
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+  --text-gold: #D8B15E;
+
+  /* Hairline Rules */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.15);
+  --border-focus: var(--gold-primary);
+
+  /* Radii & Shadows */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  --shadow-subtle: 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.6);
+  --shadow-gold: 0 0 20px rgba(197, 154, 69, 0.2);
+
+  /* Font Families */
+  --font-serif: 'Cinzel', 'Newsreader', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', Consolas, monospace;
+}
+
+/* ==========================================================================
+   RESET & BASE STYLING
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Typography elements */
+h1, h2, h3, h4, .font-serif {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+  border: none;
+  background: none;
+}
+
+input, select, textarea {
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-deep-void);
+}
+::-webkit-scrollbar-thumb {
+  background: #232B3B;
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-deep);
+}
+
+/* ==========================================================================
+   BUTTONS & BADGES
+   ========================================================================== */
+
+.btn-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #B78A28 100%);
+  color: #0A0D14;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(183, 138, 40, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-gold:hover {
+  background: linear-gradient(135deg, #E0BA4A 0%, #C59835 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(183, 138, 40, 0.4);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--gold-border);
+  color: var(--gold-light);
+}
+
+.btn-outline-gold {
+  background: transparent;
+  color: var(--gold-primary);
+  border: 1px solid var(--gold-border);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-gold:hover {
+  background: var(--gold-subtle);
+  border-color: var(--gold-primary);
+  color: #FFF;
+}
+
+/* Badges */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge-verified {
+  background: var(--status-verified-bg);
+  color: var(--status-verified);
+  border: 1px solid var(--status-verified-border);
+}
+
+.badge-tampered {
+  background: var(--status-tampered-bg);
+  color: var(--status-tampered);
+  border: 1px solid var(--status-tampered-border);
+}
+
+.badge-pending {
+  background: var(--status-pending-bg);
+  color: var(--status-pending);
+  border: 1px solid var(--status-pending-border);
+}
+
+.badge-bns {
+  background: var(--status-bns-bg);
+  color: var(--status-bns);
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+.badge-gold {
+  background: var(--gold-subtle);
+  color: var(--gold-light);
+  border: 1px solid var(--gold-border);
+}
+
+/* ==========================================================================
+   CARDS & CONTAINERS
+   ========================================================================== */
+
+.nyaya-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s ease;
+}
+
+.nyaya-card:hover {
+  border-color: rgba(197, 154, 69, 0.25);
+}
+
+.nyaya-card-gold {
+  background: var(--bg-surface);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), var(--shadow-gold);
+}
+
+/* Form Inputs */
+.nyaya-input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.nyaya-input:focus {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 2px rgba(197, 154, 69, 0.15);
+}
+
+.nyaya-select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.nyaya-select:focus {
+  border-color: var(--gold-primary);
+}
+
+/* ==========================================================================
+   APP SHELL & NAVIGATION
+   ========================================================================== */
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-canvas);
+  overflow: hidden;
+}
+
+.app-sidebar {
+  width: 240px;
+  background: var(--bg-deep-void);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.app-sidebar-logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.app-sidebar-nav {
+  padding: 16px 10px;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+}
+
+.sidebar-nav-item:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.sidebar-nav-item.active {
+  background: rgba(197, 154, 69, 0.08);
+  color: var(--gold-light);
+  border-left-color: var(--gold-primary);
+  font-weight: 600;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-canvas);
+}
+
+.app-topbar {
+  height: 64px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  flex-shrink: 0;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+.nyaya-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.nyaya-table th {
+  padding: 12px 16px;
+  background: var(--bg-surface-elevated);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nyaya-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.nyaya-table tr:hover td {
+  background: var(--bg-surface-hover);
+}
+
+/* ==========================================================================
+   DOCUMENT VIEWER & REDACTION STUDIO
+   ========================================================================== */
+
+.parchment-document {
+  background: var(--parchment-sheet);
+  color: var(--parchment-ink);
+  border: 1px solid var(--parchment-border);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  font-family: 'Newsreader', Georgia, serif;
+  padding: 32px 36px;
+  line-height: 1.7;
+  position: relative;
+}
+
+.parchment-document::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border: 1px solid rgba(197, 154, 69, 0.25);
+  pointer-events: none;
+}
+
+.redaction-bar {
+  background-color: #0A0D14;
+  color: transparent !important;
+  display: inline-block;
+  border-radius: 2px;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.redaction-bar:hover {
+  outline: 2px solid var(--gold-primary);
+}
+
+.redaction-bar.revealed {
+  background-color: rgba(236, 72, 153, 0.2);
+  color: #9D174D !important;
+  outline: 1px dashed #EC4899;
+}
+
+/* ==========================================================================
+   OFFLINE & FIELD MOBILE VIEWPORT
+   ========================================================================== */
+
+.mobile-device-shell {
+  width: 320px;
+  height: 640px;
+  background: #000;
+  border-radius: 36px;
+  border: 8px solid #2A303C;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 2px #181D26;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.mobile-notch {
+  height: 20px;
+  background: #2A303C;
+  width: 140px;
+  margin: 0 auto;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.mobile-screen {
+  flex: 1;
+  background: var(--bg-canvas);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mobile-bottom-nav {
+  height: 56px;
+  background: var(--bg-deep-void);
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+}
+
+.mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.mobile-nav-btn.active {
+  color: var(--gold-light);
+}
+
+/* ==========================================================================
+   PRINT STYLES FOR SECTION 63 BSA CERTIFICATE
+   ========================================================================== */
+
+@media print {
+  body {
+    background: #FFF !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+}
