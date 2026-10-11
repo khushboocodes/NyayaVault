@@ -1,8 +1,9 @@
 import { db } from '../db/database.js';
+import { AuditService } from '../services/auditService.js';
 
 export class AuditController {
   static getAuditTrail(req, res) {
-    const logs = db.prepare('SELECT * FROM audit_trail ORDER BY created_at DESC LIMIT 100').all();
+    const logs = db.prepare('SELECT * FROM audit_trail ORDER BY created_at DESC LIMIT 200').all();
 
     const formatted = logs.map(l => ({
       id: l.id,
@@ -22,32 +23,27 @@ export class AuditController {
   }
 
   static createAuditLog(req, res) {
-    const { action, document, result, details } = req.body;
+    const { action, document, result, details, user: bodyUser, userRole: bodyUserRole, organization: bodyOrg } = req.body;
 
-    const user = req.user ? req.user.full_name : 'System Monitor';
-    const userRole = req.user ? req.user.role_title : 'Auditor';
-    const org = req.user ? req.user.agency_name : 'NyayaVault Consortium';
-    const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
-    const id = `AUD-${Date.now().toString().slice(-4)}`;
+    const user = req.user ? req.user.full_name : (bodyUser || 'SI Rajesh Kumar');
+    const userRole = req.user ? req.user.role_title : (bodyUserRole || 'Investigating Officer (IO)');
+    const organization = req.user ? req.user.agency_name : (bodyOrg || 'Chhattisgarh State Police');
 
-    db.prepare(`
-      INSERT INTO audit_trail (
-        id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      nowStr,
+    const created = AuditService.log({
       user,
       userRole,
-      org,
-      action || 'General Action',
-      document || 'System',
-      result || 'Success',
-      details || 'Action captured.',
-      req.ip || '127.0.0.1',
-      'e2b4...8f1a'
-    );
+      organization,
+      action: action || 'General Activity',
+      document: document || 'System Portal',
+      result: result || 'Success',
+      details: details || 'Activity recorded in sovereign audit trail.',
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
+      macHash: 'e2b4...8f1a'
+    });
 
-    return res.status(201).json({ id, message: 'Audit event recorded.' });
+    return res.status(201).json({
+      message: 'Audit event recorded.',
+      audit: created
+    });
   }
 }
