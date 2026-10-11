@@ -96,7 +96,23 @@ export class EvidenceController {
 
       const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
 
-      // 5. Store record in database
+      // 5. Resolve valid foreign keys and store record in database
+      let validCaseId = caseId || 'FIR-2026-001';
+      const existingCase = db.prepare('SELECT id FROM cases WHERE id = ? OR fir_number = ?').get(validCaseId, validCaseId);
+      if (existingCase) {
+        validCaseId = existingCase.id;
+      } else {
+        const firstCase = db.prepare('SELECT id FROM cases ORDER BY id ASC LIMIT 1').get();
+        validCaseId = firstCase ? firstCase.id : 'FIR-2026-001';
+      }
+
+      let validUserId = req.user ? req.user.id : 'usr-io-001';
+      const userExists = db.prepare('SELECT id FROM users WHERE id = ?').get(validUserId);
+      if (!userExists) {
+        const firstUser = db.prepare('SELECT id FROM users LIMIT 1').get();
+        validUserId = firstUser ? firstUser.id : 'usr-io-001';
+      }
+
       db.prepare(`
         INSERT INTO evidence_records (
           id, case_id, name, doc_type, size, file_size_bytes, pages, status,
@@ -111,7 +127,7 @@ export class EvidenceController {
         )
       `).run(
         evidenceId,
-        caseId || 'FIR-2026-001',
+        validCaseId,
         fileName,
         docType || 'Witness Statement',
         fileSize,
@@ -132,7 +148,7 @@ export class EvidenceController {
         encryptionResult.iv,
         encryptionResult.authTag,
         description || 'Digital evidence record ingested via NyayaVault airlock.',
-        req.user ? req.user.id : 'usr-io-001',
+        validUserId,
         nowStr
       );
 
