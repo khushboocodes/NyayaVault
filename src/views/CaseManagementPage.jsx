@@ -11,6 +11,7 @@ import {
   ChevronRight,
   MoreVertical
 } from 'lucide-react';
+import { logActivity } from '../utils/auditLogger';
 
 export default function CaseManagementPage({ 
   cases, 
@@ -32,6 +33,11 @@ export default function CaseManagementPage({
   });
 
   const handleRowClick = (caseItem) => {
+    logActivity({
+      action: 'Case Dossier Accessed',
+      document: `${caseItem.firNumber} - ${caseItem.caseTitle}`,
+      details: `Opened case file for FIR '${caseItem.firNumber}' (${caseItem.caseTitle}). Police Station: ${caseItem.policeStation}.`
+    });
     setSelectedCase(caseItem);
     setCurrentScreen('case-details');
   };

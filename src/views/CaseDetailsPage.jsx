@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FolderLock, 
   Upload, 
@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Download
 } from 'lucide-react';
+import { logActivity } from '../utils/auditLogger';
 
 export default function CaseDetailsPage({ 
   selectedCase, 
@@ -38,6 +39,16 @@ export default function CaseDetailsPage({
       { step: "Charge Sheet Filed", date: "Pending Committal", status: "pending" }
     ]
   };
+
+  useEffect(() => {
+    if (caseData?.firNumber) {
+      logActivity({
+        action: 'Case Dossier Accessed',
+        document: `${caseData.firNumber} - ${caseData.caseTitle}`,
+        details: `Accessed master case file for FIR '${caseData.firNumber}' (${caseData.caseTitle}). Station: ${caseData.policeStation}.`
+      });
+    }
+  }, [caseData?.firNumber]);
 
   const caseDocs = documents.filter(d => d.caseId === caseData.firNumber);
 
