@@ -8,6 +8,7 @@ import { BlockchainService } from '../services/blockchainService.js';
 import { RedactionService } from '../services/redactionService.js';
 import { BsaCertificateService } from '../services/bsaCertificateService.js';
 import { VaultStorage } from '../storage/vaultStorage.js';
+import { AuditService } from '../services/auditService.js';
 
 export class EvidenceController {
   /**
@@ -244,6 +245,18 @@ export class EvidenceController {
 
     const caseItem = db.prepare('SELECT * FROM cases WHERE id = ?').get(doc.case_id);
 
+    // Audit trail logging
+    AuditService.log({
+      user: req.user ? req.user.full_name : 'SI Rajesh Kumar',
+      userRole: req.user ? req.user.role_title : 'Investigating Officer (IO)',
+      organization: req.user ? req.user.agency_name : 'State Police Department',
+      action: 'Document Viewed',
+      document: `${doc.name} (${doc.id})`,
+      result: 'Success',
+      details: `Viewed digital evidence record '${doc.name}' (${doc.id}). Case: ${doc.case_id}. Sensitivity: ${doc.is_sensitive === 1 ? 'Sec 72 BNS Classified' : 'Standard'}.`,
+      ipAddress: req.ip || '127.0.0.1'
+    });
+
     return res.json({
       evidence: {
         ...doc,
@@ -275,6 +288,17 @@ export class EvidenceController {
       const caseItem = db.prepare('SELECT * FROM cases WHERE id = ?').get(doc.case_id) || {};
       const certBuffer = await BsaCertificateService.generateCertificatePdf(doc, caseItem);
 
+      AuditService.log({
+        user: req.user ? req.user.full_name : 'SI Rajesh Kumar',
+        userRole: req.user ? req.user.role_title : 'Investigating Officer (IO)',
+        organization: req.user ? req.user.agency_name : 'State Police Department',
+        action: 'BSA Certificate Generated',
+        document: `${doc.name} (${doc.id})`,
+        result: 'Success',
+        details: `Generated Section 63 BSA electronic admissibility certificate for '${doc.name}' (${doc.id}). Dual-hash verified.`,
+        ipAddress: req.ip || '127.0.0.1'
+      });
+
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="BSA_Section_63_Certificate_${doc.id}.pdf"`);
       return res.send(certBuffer);
@@ -302,6 +326,17 @@ export class EvidenceController {
       const isSensitive = doc.is_sensitive === 1;
 
       if (isSensitive && version === 'master' && !['JUDGE', 'IO'].includes(userRole)) {
+        AuditService.log({
+          user: req.user ? req.user.full_name : 'Unauthorized User',
+          userRole: req.user ? req.user.role_title : 'Public User',
+          organization: req.user ? req.user.agency_name : 'External Access',
+          action: 'Document Access Denied',
+          document: `${doc.name} (${doc.id})`,
+          result: 'Denied',
+          details: `Blocked attempt to access unredacted sensitive record '${doc.name}' (${doc.id}) under Section 72 BNS.`,
+          ipAddress: req.ip || '127.0.0.1'
+        });
+
         return res.status(403).json({
           error: 'Access Denied: Section 72 BNS strictly prohibits distribution of unredacted victim records to unauthorized roles.'
         });
@@ -318,6 +353,17 @@ export class EvidenceController {
       }
 
       const decrypted = CryptoService.decryptEnvelope(ciphertext, doc.iv, doc.auth_tag, doc.encrypted_dek);
+
+      AuditService.log({
+        user: req.user ? req.user.full_name : 'SI Rajesh Kumar',
+        userRole: req.user ? req.user.role_title : 'Investigating Officer (IO)',
+        organization: req.user ? req.user.agency_name : 'State Police Department',
+        action: 'Document Downloaded',
+        document: `${doc.name} (${doc.id})`,
+        result: 'Success',
+        details: `Downloaded ${version === 'master' ? 'unredacted master' : 'redacted derivative'} file of '${doc.name}' (${doc.id}). Decrypted via AES-256-GCM.`,
+        ipAddress: req.ip || '127.0.0.1'
+      });
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${doc.name}"`);
