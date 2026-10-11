@@ -165,8 +165,11 @@ flowchart TD
 ### Phase 9: Real Multi-Agency Chain of Custody & Audit Trail
 - [x] **Task 9.1: Cryptographic Custody Handoff Protocol**
   - Implemented `CustodyController.appendHandoff` anchoring transfers to the blockchain and recording verified hops in the database.
-- [x] **Task 9.2: Real Immutable Consortium Audit Trail**
-  - Implemented `AuditController.getAuditTrail` and `createAuditLog` capturing user, role, agency, action, timestamp, and IP address.
+- [x] **Task 9.2: Real Immutable Consortium Audit Trail & Universal Activity Tracking**
+  - Built centralized `AuditService` in `server/src/services/auditService.js`.
+  - Automatic audit recording across all backend endpoints: `Document Viewed`, `Document Downloaded`, `BSA Certificate Generated`, `Case Dossier Accessed`, `Case Registered`, `File Integrity Inspected`, `Hash Verification Checked`, `Custody Handoff Recorded`, `Evidence Ingested & Anchored`.
+  - Global client audit utility `src/utils/auditLogger.js` capturing user actions, persona metadata, and firing real-time events.
+  - Upgraded `AuditTrailPage.jsx` with full activity details column, dynamic action filters, real-time log ingestion, signed CSV export, and instant manual refresh.
 
 ---
 
