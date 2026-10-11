@@ -21,6 +21,7 @@ import {
 import confetti from 'canvas-confetti';
 import { SENSITIVE_ENTITIES_DEMO } from '../data/mockData';
 import { api } from '../api';
+import { logActivity } from '../utils/auditLogger';
 
 export default function DocumentIngestionPage({ 
   setCurrentScreen, 
@@ -152,6 +153,13 @@ export default function DocumentIngestionPage({
         setAnchorProgress(5); // Block Confirmation
         // Advance to Step 5 (Success)
         setCurrentStep(5);
+
+        logActivity({
+          action: 'Evidence Ingested & Anchored',
+          document: `${fileName} (${caseId})`,
+          details: `Ingested '${fileName}' into case docket ${caseId}. Master SHA-256: ${computedSha256.slice(0, 16)}... Envelope encrypted with AES-256-GCM and anchored on-chain.`
+        });
+
         try {
           confetti({
             particleCount: 60,

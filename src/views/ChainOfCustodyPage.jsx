@@ -13,11 +13,18 @@ import {
 } from 'lucide-react';
 import { INITIAL_CHAIN_OF_CUSTODY } from '../data/mockData';
 import { api } from '../api';
+import { logActivity } from '../utils/auditLogger';
 
 export default function ChainOfCustodyPage({ setCurrentScreen }) {
   const [chain, setChain] = useState(INITIAL_CHAIN_OF_CUSTODY);
 
   useEffect(() => {
+    logActivity({
+      action: 'Custody Chain Inspected',
+      document: 'FIR-2026-001 / Witness_Statement.pdf',
+      details: 'Inspected chronological multi-agency chain of custody hops, ECDSA key signatures, and block timestamps.'
+    });
+
     async function fetchCustody() {
       try {
         const res = await api.custody.getChain('all');
@@ -30,6 +37,15 @@ export default function ChainOfCustodyPage({ setCurrentScreen }) {
     }
     fetchCustody();
   }, []);
+
+  const handleExportCertificate = () => {
+    logActivity({
+      action: 'Custody Certificate Export Requested',
+      document: 'FIR-2026-001 / Witness_Statement.pdf',
+      details: 'Requested legal custody certificate export under ISO/IEC 27037 standards.'
+    });
+    setCurrentScreen('certificates');
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

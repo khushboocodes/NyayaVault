@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { api } from '../api';
+import { logActivity } from '../utils/auditLogger';
 
 const INITIAL_QUEUE = [
   {
@@ -167,15 +168,12 @@ export default function OfflineSyncPage({
     setSyncStatusStep('3/4: Anchoring SHA-256 hashes on Hyperledger Fabric / EVM Ledger...');
 
     // Log to real audit trail
-    try {
-      await api.audit.log({
-        action: 'OFFLINE_FIELD_SYNC',
-        details: `Batch synchronized ${queue.length} evidence items from remote field thana terminal`,
-        status: 'SUCCESS'
-      });
-    } catch (e) {
-      // offline fallback
-    }
+    logActivity({
+      action: 'Offline Field Synchronized',
+      document: `${queue.length} Queue Exhibits`,
+      details: `Batch synchronized ${queue.length} digital evidence exhibits from remote field thana terminal into sovereign ledger.`,
+      result: 'Success'
+    });
 
     await new Promise(r => setTimeout(r, 700));
     setSyncProgress(100);
