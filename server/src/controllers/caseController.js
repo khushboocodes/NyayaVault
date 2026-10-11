@@ -1,4 +1,5 @@
 import { db } from '../db/database.js';
+import { AuditService } from '../services/auditService.js';
 
 export class CaseController {
   static getAllCases(req, res) {
@@ -38,6 +39,17 @@ export class CaseController {
     }
 
     const documents = db.prepare('SELECT * FROM evidence_records WHERE case_id = ? ORDER BY created_at DESC').all(caseRecord.id);
+
+    AuditService.log({
+      user: req.user ? req.user.full_name : 'SI Rajesh Kumar',
+      userRole: req.user ? req.user.role_title : 'Investigating Officer (IO)',
+      organization: req.user ? req.user.agency_name : 'State Police Department',
+      action: 'Case Dossier Accessed',
+      document: `${caseRecord.fir_number} - ${caseRecord.case_title}`,
+      result: 'Success',
+      details: `Inspected case dossier for FIR '${caseRecord.fir_number}' (${caseRecord.case_title}) with ${documents.length} linked digital exhibits.`,
+      ipAddress: req.ip || '127.0.0.1'
+    });
 
     return res.json({
       caseItem: {
@@ -83,6 +95,7 @@ export class CaseController {
     const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
     const officer = req.user ? req.user.full_name : 'SI Rajesh Kumar';
     const badge = req.user ? req.user.badge_number : 'CG-8401';
+    const org = req.user ? req.user.agency_name : 'State Police Department';
 
     try {
       db.prepare(`
@@ -101,6 +114,17 @@ export class CaseController {
         nowStr,
         priority || 'Normal'
       );
+
+      AuditService.log({
+        user: officer,
+        userRole: req.user ? req.user.role_title : 'Investigating Officer (IO)',
+        organization: org,
+        action: 'Case Registered',
+        document: `${firNumber} - ${caseTitle}`,
+        result: 'Success',
+        details: `Registered new Case FIR '${firNumber}' (${caseTitle}) under ${crimeHead || 'BNS'}.`,
+        ipAddress: req.ip || '127.0.0.1'
+      });
 
       return res.status(201).json({
         message: 'Case FIR created successfully',
