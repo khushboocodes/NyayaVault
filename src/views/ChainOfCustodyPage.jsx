@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   GitBranch, 
   CheckCircle2, 
@@ -12,8 +12,25 @@ import {
   Key
 } from 'lucide-react';
 import { INITIAL_CHAIN_OF_CUSTODY } from '../data/mockData';
+import { api } from '../api';
 
 export default function ChainOfCustodyPage({ setCurrentScreen }) {
+  const [chain, setChain] = useState(INITIAL_CHAIN_OF_CUSTODY);
+
+  useEffect(() => {
+    async function fetchCustody() {
+      try {
+        const res = await api.custody.getChain('all');
+        if (res?.custodyChain && res.custodyChain.length > 0) {
+          setChain(res.custodyChain);
+        }
+      } catch (err) {
+        console.warn('Live custody chain fallback:', err.message);
+      }
+    }
+    fetchCustody();
+  }, []);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
@@ -73,7 +90,7 @@ export default function ChainOfCustodyPage({ setCurrentScreen }) {
             }} 
           />
 
-          {INITIAL_CHAIN_OF_CUSTODY.map((item, index) => (
+          {chain.map((item, index) => (
             <div 
               key={index}
               style={{

@@ -13,6 +13,7 @@ import {
   Printer, 
   Share2 
 } from 'lucide-react';
+import { api } from '../api';
 
 export default function DocumentViewerPage({ 
   selectedDoc, 
@@ -107,12 +108,12 @@ export default function DocumentViewerPage({
           </button>
 
           <button 
-            onClick={() => alert(`Downloading signed copy of ${doc.name}...`)}
+            onClick={() => window.open(api.evidence.getDownloadUrl(doc.id, 'master'), '_blank')}
             className="btn-secondary"
             style={{ fontSize: '12px', padding: '7px 14px' }}
           >
             <Download size={14} />
-            <span>Download</span>
+            <span>Download Decrypted File</span>
           </button>
         </div>
       </div>

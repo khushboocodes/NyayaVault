@@ -108,6 +108,8 @@ function getInitialNavigationState() {
   }
 }
 
+import { api } from './api';
+
 export default function App() {
   // Navigation & Authentication state
   const initialNav = getInitialNavigationState();
@@ -117,6 +119,28 @@ export default function App() {
   // Data State
   const [cases, setCases] = useState(INITIAL_CASES);
   const [documents, setDocuments] = useState(INITIAL_DOCUMENTS);
+
+  // Load live data from backend engine on mount
+  useEffect(() => {
+    async function loadLiveData() {
+      try {
+        const [casesRes, docsRes] = await Promise.all([
+          api.cases.getAll().catch(() => null),
+          api.evidence.getAll().catch(() => null)
+        ]);
+
+        if (casesRes?.cases && casesRes.cases.length > 0) {
+          setCases(casesRes.cases);
+        }
+        if (docsRes?.documents && docsRes.documents.length > 0) {
+          setDocuments(docsRes.documents);
+        }
+      } catch (err) {
+        console.warn('Backend connection fallback to initial data:', err.message);
+      }
+    }
+    loadLiveData();
+  }, []);
 
   // Restore selectedCase and selectedDoc from sessionStorage across page refresh
   const [selectedCase, setSelectedCase] = useState(() => {
@@ -163,12 +187,22 @@ export default function App() {
   };
 
   // Authentication: Successful login
-  const handleLogin = (role) => {
+  const handleLogin = async (role) => {
     const roleToSet = role || userRole || DEFAULT_ROLE;
     sessionStorage.setItem('nyayavault_auth', 'true');
     sessionStorage.setItem('nyayavault_role_id', roleToSet.id);
     setUserRole(roleToSet);
     setIsAuthenticated(true);
+
+    // Call live backend login to retrieve and persist real JWT token
+    try {
+      const authRes = await api.auth.login({ roleId: roleToSet.id });
+      if (authRes?.token) {
+        sessionStorage.setItem('nyayavault_token', authRes.token);
+      }
+    } catch (e) {
+      console.warn('Backend login token issue:', e.message);
+    }
 
     // Replace login in history with dashboard so login is not accessible via Back
     window.history.replaceState({ screen: 'dashboard' }, '', '/dashboard');
@@ -178,6 +212,7 @@ export default function App() {
   // Explicit Logout: Clear authentication and return to Login
   const handleLogout = () => {
     sessionStorage.removeItem('nyayavault_auth');
+    sessionStorage.removeItem('nyayavault_token');
     sessionStorage.removeItem('nyayavault_role_id');
     sessionStorage.removeItem('nyayavault_case_id');
     sessionStorage.removeItem('nyayavault_doc_id');

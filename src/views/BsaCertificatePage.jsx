@@ -9,6 +9,7 @@ import {
   Scale, 
   ArrowLeft 
 } from 'lucide-react';
+import { api } from '../api';
 
 export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
   const printRef = useRef();
@@ -49,13 +50,23 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
+          <a 
+            href={api.evidence.getCertificateUrl(doc.id || 'DOC-2026-00123')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-secondary"
+            style={{ fontSize: '12px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
+          >
+            <Download size={15} />
+            <span>Download Signed PDF</span>
+          </a>
           <button 
             onClick={handlePrint}
             className="btn-gold"
             style={{ fontSize: '12px', padding: '8px 18px' }}
           >
             <Printer size={15} />
-            <span>Print / Save as PDF</span>
+            <span>Print View</span>
           </button>
         </div>
       </div>

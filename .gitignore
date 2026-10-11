@@ -35,4 +35,11 @@ docs/
 public/image.png
 public/screens-reference.jpg
 
+# Server Runtime & Vault Storage
+server/.env
+server/storage/*.sqlite*
+server/storage/vault/*
+!server/storage/vault/.gitkeep
+
+
 

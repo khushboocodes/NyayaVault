@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ScrollText, 
   Search, 
@@ -8,12 +8,28 @@ import {
   ArrowDownToLine 
 } from 'lucide-react';
 import { INITIAL_AUDIT_TRAIL } from '../data/mockData';
+import { api } from '../api';
 
 export default function AuditTrailPage({ setCurrentScreen }) {
   const [selectedAction, setSelectedAction] = useState('ALL');
   const [searchTerm, setSearchTerm] = useState('');
+  const [logs, setLogs] = useState(INITIAL_AUDIT_TRAIL);
 
-  const filteredLogs = INITIAL_AUDIT_TRAIL.filter(log => {
+  useEffect(() => {
+    async function fetchLogs() {
+      try {
+        const res = await api.audit.getTrail();
+        if (res?.auditTrail && res.auditTrail.length > 0) {
+          setLogs(res.auditTrail);
+        }
+      } catch (err) {
+        console.warn('Live audit trail fallback:', err.message);
+      }
+    }
+    fetchLogs();
+  }, []);
+
+  const filteredLogs = logs.filter(log => {
     const matchesAction = selectedAction === 'ALL' || log.action === selectedAction;
     const term = searchTerm.toLowerCase();
     const matchesSearch = 

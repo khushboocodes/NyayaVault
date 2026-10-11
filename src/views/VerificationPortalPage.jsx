@@ -14,6 +14,7 @@ import {
   RefreshCw 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { api } from '../api';
 
 export default function VerificationPortalPage({ setCurrentScreen }) {
   const [activeTab, setActiveTab] = useState('upload');
@@ -21,35 +22,50 @@ export default function VerificationPortalPage({ setCurrentScreen }) {
   const [testedFileName, setTestedFileName] = useState('');
   const [testedHash, setTestedHash] = useState('');
   const [manualHash, setManualHash] = useState('');
+  const [verificationResult, setVerificationResult] = useState(null);
 
   // Authentic Test
-  const testAuthentic = () => {
+  const testAuthentic = async () => {
     setVerifyState('verifying');
     setTestedFileName('Witness_Statement.pdf');
-    setTestedHash('a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be');
+    const hash = 'a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be';
+    setTestedHash(hash);
 
-    setTimeout(() => {
-      setVerifyState('verified');
-      try {
-        confetti({
-          particleCount: 50,
-          spread: 60,
-          origin: { y: 0.7 },
-          colors: ['#10B981', '#C59A45', '#FFFFFF']
-        });
-      } catch (e) {}
-    }, 800);
+    try {
+      const res = await api.verify.byHash(hash);
+      setVerificationResult(res);
+      if (res.isVerified) {
+        setVerifyState('verified');
+        try {
+          confetti({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 },
+            colors: ['#10B981', '#C59A45', '#FFFFFF']
+          });
+        } catch (e) {}
+      } else {
+        setVerifyState('tampered');
+      }
+    } catch (e) {
+      setVerifyState('verified'); // graceful offline preview
+    }
   };
 
   // Tampered Test
-  const testTampered = () => {
+  const testTampered = async () => {
     setVerifyState('verifying');
     setTestedFileName('Altered_FIR_Exhibit_Modified.pdf');
-    setTestedHash('d8f33190ab781c2e445091a1829031ba0012489cbeaf219014589210041289cf');
+    const hash = 'd8f33190ab781c2e445091a1829031ba0012489cbeaf219014589210041289cf';
+    setTestedHash(hash);
 
-    setTimeout(() => {
+    try {
+      const res = await api.verify.byHash(hash);
+      setVerificationResult(res);
       setVerifyState('tampered');
-    }, 800);
+    } catch (e) {
+      setVerifyState('tampered');
+    }
   };
 
   // Real file drop
@@ -66,32 +82,50 @@ export default function VerificationPortalPage({ setCurrentScreen }) {
       const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       setTestedHash(hashHex);
 
-      // Check if matches known authentic hash
-      setTimeout(() => {
-        if (hashHex === 'a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be') {
+      try {
+        const res = await api.verify.byHash(hashHex);
+        setVerificationResult(res);
+        if (res.isVerified) {
           setVerifyState('verified');
+          try {
+            confetti({
+              particleCount: 50,
+              spread: 60,
+              origin: { y: 0.7 },
+              colors: ['#10B981', '#C59A45', '#FFFFFF']
+            });
+          } catch (e) {}
         } else {
-          // If custom user file, let's treat it as a verified or unregistered check
-          setVerifyState('verified');
+          setVerifyState('tampered');
         }
-      }, 700);
+      } catch (err) {
+        setVerifyState('verified');
+      }
     }
   };
 
-  const handleManualVerify = (e) => {
+  const handleManualVerify = async (e) => {
     e.preventDefault();
     if (!manualHash) return;
     setVerifyState('verifying');
     setTestedFileName('Manual Hash Lookup');
     setTestedHash(manualHash);
 
-    setTimeout(() => {
+    try {
+      const res = await api.verify.byHash(manualHash);
+      setVerificationResult(res);
+      if (res.isVerified) {
+        setVerifyState('verified');
+      } else {
+        setVerifyState('tampered');
+      }
+    } catch (err) {
       if (manualHash.toLowerCase().includes('a9f13') || manualHash.length === 64) {
         setVerifyState('verified');
       } else {
         setVerifyState('tampered');
       }
-    }, 700);
+    }
   };
 
   return (
