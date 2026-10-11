@@ -5,7 +5,8 @@
 
 const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
   ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
-  : '/api';
+  : (typeof import.meta !== 'undefined' && import.meta.env?.PROD ? 'https://nyayavault-backend-u03b.onrender.com/api' : '/api');
+
 
 function getAuthHeader() {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('nyayavault_token') : null;
