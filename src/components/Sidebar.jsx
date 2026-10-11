@@ -22,7 +22,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, userRole, onL
     { id: 'custody', label: 'Chain of Custody', icon: GitBranch },
     { id: 'verification', label: 'Verify Authenticity', icon: ShieldCheck },
     { id: 'audit', label: 'Audit Trail', icon: ScrollText },
-    { id: 'mobile-app', label: 'Offline Sync', icon: RefreshCw },
+    { id: 'mobile-app', label: 'Offline Sync Hub', icon: RefreshCw },
     { id: 'settings', label: 'System Settings', icon: Settings }
   ];
 

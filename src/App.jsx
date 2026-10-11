@@ -14,7 +14,10 @@ import VerificationPortalPage from './views/VerificationPortalPage';
 import ChainOfCustodyPage from './views/ChainOfCustodyPage';
 import BsaCertificatePage from './views/BsaCertificatePage';
 import AuditTrailPage from './views/AuditTrailPage';
-import MobileAppSimulatorPage from './views/MobileAppSimulatorPage';
+import OfflineSyncPage from './views/OfflineSyncPage';
+import MobileBottomNav from './components/MobileBottomNav';
+import MobileDrawer from './components/MobileDrawer';
+import { WifiOff } from 'lucide-react';
 
 import { INITIAL_CASES, INITIAL_DOCUMENTS } from './data/mockData';
 import { DEFAULT_ROLE, ROLES } from './data/rolesData';
@@ -38,6 +41,7 @@ const PATH_TO_SCREEN = {
   '/certificates': 'certificates',
   '/audit': 'audit',
   '/mobile-app': 'mobile-app',
+  '/offline-sync': 'mobile-app',
   '/settings': 'settings'
 };
 
@@ -158,9 +162,25 @@ export default function App() {
     return ROLES.find(r => r.id === savedRoleId) || DEFAULT_ROLE;
   });
 
-  // Offline Simulation State
+  // Offline Simulation & Field State
   const [isOffline, setIsOffline] = useState(false);
   const [offlineQueueCount, setOfflineQueueCount] = useState(4);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+
+  // Real-time network connectivity listener
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const updateOnlineStatus = () => {
+        setIsOffline(!navigator.onLine);
+      };
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+      return () => {
+        window.removeEventListener('online', updateOnlineStatus);
+        window.removeEventListener('offline', updateOnlineStatus);
+      };
+    }
+  }, []);
 
   // Sync state to sessionStorage for survival across refresh
   useEffect(() => {
@@ -333,6 +353,16 @@ export default function App() {
       {/* 5-18. AUTHENTICATED APPLICATION WORKSPACE (With Persistent Sidebar & TopBar) */}
       {!isStandalonePage && (
         <div className="app-container">
+          {/* Mobile Drawer (Menu overlay on mobile) */}
+          <MobileDrawer 
+            isOpen={isMobileDrawerOpen} 
+            onClose={() => setIsMobileDrawerOpen(false)} 
+            currentScreen={currentScreen} 
+            setCurrentScreen={navigateToScreen} 
+            userRole={userRole} 
+            onLogout={handleLogout} 
+          />
+
           {/* Persistent Sidebar with Role-Filtered Navigation */}
           <Sidebar 
             currentScreen={currentScreen} 
@@ -351,7 +381,27 @@ export default function App() {
               isOffline={isOffline}
               setIsOffline={setIsOffline}
               offlineQueueCount={offlineQueueCount}
+              onOpenMobileDrawer={() => setIsMobileDrawerOpen(true)}
             />
+
+            {/* Global Offline Field Banner */}
+            {isOffline && (
+              <div className="global-offline-banner">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <WifiOff size={15} style={{ color: 'var(--status-pending)', flexShrink: 0 }} />
+                  <span style={{ fontSize: '12px' }}>
+                    <strong>2G Field Mode Active:</strong> Operating in zero-connectivity zone. Captured evidence is signed with device key and stored in encrypted local vault.
+                  </span>
+                </div>
+                <button 
+                  onClick={() => navigateToScreen('mobile-app')} 
+                  className="btn-secondary" 
+                  style={{ fontSize: '11px', padding: '4px 10px', flexShrink: 0 }}
+                >
+                  View Sync Queue ({offlineQueueCount})
+                </button>
+              </div>
+            )}
 
             {/* Dynamic Screen Content */}
             <main className="app-content">
@@ -423,9 +473,13 @@ export default function App() {
                 />
               )}
 
-              {currentScreen === 'mobile-app' && (
-                <MobileAppSimulatorPage 
+              {(currentScreen === 'mobile-app' || currentScreen === 'offline-sync') && (
+                <OfflineSyncPage 
                   setCurrentScreen={navigateToScreen}
+                  isOffline={isOffline}
+                  setIsOffline={setIsOffline}
+                  offlineQueueCount={offlineQueueCount}
+                  setOfflineQueueCount={setOfflineQueueCount}
                 />
               )}
 
@@ -445,6 +499,13 @@ export default function App() {
                 </div>
               )}
             </main>
+
+            {/* Mobile Bottom Navigation Bar (Visible only on mobile viewports <= 768px) */}
+            <MobileBottomNav 
+              currentScreen={currentScreen} 
+              setCurrentScreen={navigateToScreen} 
+              offlineQueueCount={offlineQueueCount} 
+            />
           </div>
         </div>
       )}

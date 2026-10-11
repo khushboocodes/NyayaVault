@@ -170,10 +170,18 @@ flowchart TD
 
 ---
 
-### Phase 10: Real Offline Field Sync Engine
+### Phase 10: Real Offline Field Sync Engine & Authentic Mobile Responsive UI
 - [x] **Task 10.1: Client & Server Offline Reconciliation Models**
   - Defined `offline_queue` table with device ID, monotonic sequence, device timestamp, received timestamp, and clock drift calculation ($\Delta t$).
   - Built anti-backdating guard flagging `SYNC_LATENCY_FLAG` if drift exceeds allowable threshold.
+- [x] **Task 10.2: Removal of Mock Dual-Phone Simulator Frames**
+  - Eliminated `.mobile-device-shell` and `.mobile-notch` artificial phone drawings.
+  - Replaced with production **Offline Field Mode & Sync Hub** (`OfflineSyncPage.jsx`): real on-device SHA-256 calculation, direct device camera OCR/photo scan (`capture="environment"`), local encrypted queue, and one-click blockchain ledger auto-sync.
+- [x] **Task 10.3: Native Mobile Application Layout & Responsive Design System**
+  - **Mobile Bottom Navigation Bar (`MobileBottomNav.jsx`)**: Pinned bottom navigation for mobile viewports (<= 768px) with Dashboard, Cases, Capture, Verify, and Sync Queue with live pending count badge.
+  - **Mobile Slide-Over Drawer (`MobileDrawer.jsx`)**: Institutional slide-over menu providing access to all 14 screens, user jurisdiction, and session control.
+  - **Adaptive Header (`TopNav.jsx`)**: Compact mobile topbar with hamburger toggle, Ashoka Lion emblem, and responsive connectivity pill.
+  - **Global Offline Banner**: Real-time browser connectivity listener (`window.addEventListener('online'/'offline')`) displaying non-intrusive field alert across all screens.
 
 ---
 
