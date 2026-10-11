@@ -6,6 +6,8 @@ import {
   FileText,
   Upload,
   GitBranch,
+  ShieldCheck,
+  ScrollText,
   RefreshCw,
   Settings,
   LogOut
@@ -18,6 +20,8 @@ export default function Sidebar({ currentScreen, setCurrentScreen, userRole, onL
     { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'upload', label: 'Upload Evidence', icon: Upload, highlight: true },
     { id: 'custody', label: 'Chain of Custody', icon: GitBranch },
+    { id: 'verification', label: 'Verify Authenticity', icon: ShieldCheck },
+    { id: 'audit', label: 'Audit Trail', icon: ScrollText },
     { id: 'mobile-app', label: 'Offline Sync', icon: RefreshCw },
     { id: 'settings', label: 'System Settings', icon: Settings }
   ];
