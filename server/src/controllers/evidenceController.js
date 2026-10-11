@@ -7,6 +7,7 @@ import { CryptoService } from '../services/cryptoService.js';
 import { BlockchainService } from '../services/blockchainService.js';
 import { RedactionService } from '../services/redactionService.js';
 import { BsaCertificateService } from '../services/bsaCertificateService.js';
+import { VaultStorage } from '../storage/vaultStorage.js';
 
 export class EvidenceController {
   /**
@@ -68,15 +69,14 @@ export class EvidenceController {
       const encryptionResult = CryptoService.encryptEnvelope(fileBuffer);
       const evidenceId = `DOC-2026-${Date.now().toString().slice(-5)}`;
       const encryptedFileName = `${evidenceId}.enc`;
-      const encryptedFilePath = path.join(config.storageDir, encryptedFileName);
 
-      fs.writeFileSync(encryptedFilePath, encryptionResult.ciphertext);
+      await VaultStorage.saveEncryptedBlob(encryptedFileName, encryptionResult.ciphertext);
 
       // If sensitive, store redacted version as well
       if (redactedBufferToStore) {
         const redactedEncrypted = CryptoService.encryptEnvelope(redactedBufferToStore);
         const redactedFileName = `${evidenceId}_redacted.enc`;
-        fs.writeFileSync(path.join(config.storageDir, redactedFileName), redactedEncrypted.ciphertext);
+        await VaultStorage.saveEncryptedBlob(redactedFileName, redactedEncrypted.ciphertext);
       }
 
       // 4. Real Blockchain Anchoring
@@ -291,16 +291,16 @@ export class EvidenceController {
         });
       }
 
-      const targetFile = (isSensitive && version === 'redacted')
-        ? path.join(config.storageDir, `${doc.id}_redacted.enc`)
-        : path.join(config.storageDir, `${doc.id}.enc`);
+      const targetFileName = (isSensitive && version === 'redacted')
+        ? `${doc.id}_redacted.enc`
+        : `${doc.id}.enc`;
 
-      if (!fs.existsSync(targetFile)) {
-        // Fallback: If encrypted file was created before server restart, serve synthetic viewable sample
-        return res.status(404).json({ error: 'Encrypted blob not found in storage airlock.' });
+      const ciphertext = await VaultStorage.getEncryptedBlob(targetFileName);
+
+      if (!ciphertext) {
+        return res.status(404).json({ error: 'Encrypted blob not found in storage airlock or cloud vault.' });
       }
 
-      const ciphertext = fs.readFileSync(targetFile);
       const decrypted = CryptoService.decryptEnvelope(ciphertext, doc.iv, doc.auth_tag, doc.encrypted_dek);
 
       res.setHeader('Content-Type', 'application/pdf');
