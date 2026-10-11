@@ -1,6 +1,6 @@
 import { BlockchainService } from '../services/blockchainService.js';
 import { CryptoService } from '../services/cryptoService.js';
-import { db } from '../db/database.js';
+import { AuditService } from '../services/auditService.js';
 
 export class VerifyController {
   /**
@@ -17,25 +17,16 @@ export class VerifyController {
     const verification = await BlockchainService.verifyHashIntegrity(testHash);
 
     // Record audit event
-    const nowStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST';
-    const auditId = `AUD-${Date.now().toString().slice(-4)}`;
-    db.prepare(`
-      INSERT INTO audit_trail (
-        id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      auditId,
-      nowStr,
-      req.user ? req.user.full_name : 'Public Verification Gate',
-      req.user ? req.user.role_title : 'Judicial Public',
-      req.user ? req.user.agency_name : 'National e-Courts Portal',
-      'Integrity Verification Attempt',
-      verification.evidence ? verification.evidence.id : testHash.slice(0, 16) + '...',
-      verification.isVerified ? 'Success' : 'Alert',
-      `Verdict: ${verification.verdict}. ${verification.message}`,
-      req.ip || '127.0.0.1',
-      'c1a9...7e2b'
-    );
+    AuditService.log({
+      user: req.user ? req.user.full_name : 'Forensic Verification Portal',
+      userRole: req.user ? req.user.role_title : 'Judicial Public / Legal Officer',
+      organization: req.user ? req.user.agency_name : 'National e-Courts Portal',
+      action: 'Hash Integrity Verification',
+      document: verification.evidence ? `${verification.evidence.name || verification.evidence.id}` : `${testHash.slice(0, 16)}...`,
+      result: verification.isVerified ? 'Success' : 'Alert',
+      details: `Verdict: ${verification.verdict}. ${verification.message}. Target Hash: ${testHash.slice(0, 24)}...`,
+      ipAddress: req.ip || '127.0.0.1'
+    });
 
     return res.json(verification);
   }
@@ -52,6 +43,17 @@ export class VerifyController {
     const computedSha256 = CryptoService.sha256(fileBuffer);
 
     const verification = await BlockchainService.verifyHashIntegrity(computedSha256);
+
+    AuditService.log({
+      user: req.user ? req.user.full_name : 'Forensic Verification Portal',
+      userRole: req.user ? req.user.role_title : 'Judicial Public / Legal Officer',
+      organization: req.user ? req.user.agency_name : 'National e-Courts Portal',
+      action: 'File Integrity Inspected',
+      document: req.file.originalname,
+      result: verification.isVerified ? 'Success' : 'Alert',
+      details: `Uploaded '${req.file.originalname}' (${(fileBuffer.length / (1024 * 1024)).toFixed(2)} MB). Computed SHA-256: ${computedSha256.slice(0, 16)}... Verdict: ${verification.verdict}`,
+      ipAddress: req.ip || '127.0.0.1'
+    });
 
     return res.json({
       fileName: req.file.originalname,

@@ -1,5 +1,6 @@
 import { db } from '../db/database.js';
 import { BlockchainService } from '../services/blockchainService.js';
+import { AuditService } from '../services/auditService.js';
 
 export class CustodyController {
   static getCustodyChain(req, res) {
@@ -82,23 +83,16 @@ export class CustodyController {
     );
 
     // Record audit event
-    const audId = `AUD-${Date.now().toString().slice(-4)}`;
-    db.prepare(`
-      INSERT INTO audit_trail (
-        id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Success', ?, ?, ?)
-    `).run(
-      audId,
-      nowStr,
-      actor,
-      actorRole,
-      actorOrg,
-      'Custody Handoff Recorded',
-      evidenceId,
-      `Transferred custody to ${toOfficer || actor}. Tx: ${blockchainHandoff.txId.slice(0, 16)}...`,
-      req.ip || '127.0.0.1',
-      'a4f8...3c9d'
-    );
+    AuditService.log({
+      user: actor,
+      userRole: actorRole,
+      organization: actorOrg,
+      action: 'Custody Handoff Recorded',
+      document: `${evidence.name || evidenceId} (${evidenceId})`,
+      result: 'Success',
+      details: `Transferred custody of '${evidence.name || evidenceId}' to ${toOfficer || actor} (${toOrganization || actorOrg}). Stage: ${stage}. Tx: ${blockchainHandoff.txId.slice(0, 16)}...`,
+      ipAddress: req.ip || '127.0.0.1'
+    });
 
     return res.status(201).json({
       message: 'Custody handoff successfully registered and anchored on blockchain.',
