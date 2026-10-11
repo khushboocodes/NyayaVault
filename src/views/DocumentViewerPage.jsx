@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FileText, 
   CheckCircle2, 
@@ -14,6 +14,7 @@ import {
   Share2 
 } from 'lucide-react';
 import { api } from '../api';
+import { logActivity } from '../utils/auditLogger';
 
 export default function DocumentViewerPage({ 
   selectedDoc, 
@@ -39,6 +40,44 @@ export default function DocumentViewerPage({
     blockNumber: 129381,
     signer: "SI Rajesh Kumar (Badge #CG-8401)",
     organization: "Chhattisgarh State Police"
+  };
+
+  // Record audit log when document is viewed
+  useEffect(() => {
+    if (doc?.id) {
+      logActivity({
+        action: 'Document Viewed',
+        document: `${doc.name} (${doc.id})`,
+        details: `Viewed digital evidence document '${doc.name}' (${doc.id}) in sovereign viewer. Case docket: ${doc.caseId || 'Investigation'}. Sensitivity: ${doc.isSensitive ? 'Section 72 BNS Protected' : 'Standard'}.`
+      });
+    }
+  }, [doc?.id]);
+
+  const handleDownload = () => {
+    logActivity({
+      action: 'Document Downloaded',
+      document: `${doc.name} (${doc.id})`,
+      details: `Downloaded decrypted copy of '${doc.name}' (${doc.id}) with SHA-256 seal.`
+    });
+    window.open(api.evidence.getDownloadUrl(doc.id, 'master'), '_blank');
+  };
+
+  const handleGenerateBsa = () => {
+    logActivity({
+      action: 'BSA Certificate Requested',
+      document: `${doc.name} (${doc.id})`,
+      details: `Requested Section 63 BSA electronic record certificate for '${doc.name}' (${doc.id}).`
+    });
+    setCurrentScreen('certificates');
+  };
+
+  const handleVerify = () => {
+    logActivity({
+      action: 'Verification Gate Navigated',
+      document: `${doc.name} (${doc.id})`,
+      details: `Navigated to Verification Portal to verify SHA-256 integrity of '${doc.name}'.`
+    });
+    setCurrentScreen('verification');
   };
 
   return (
@@ -90,7 +129,7 @@ export default function DocumentViewerPage({
         {/* Action Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button 
-            onClick={() => setCurrentScreen('verification')}
+            onClick={handleVerify}
             className="btn-outline-gold"
             style={{ fontSize: '12px', padding: '7px 14px' }}
           >
@@ -99,7 +138,7 @@ export default function DocumentViewerPage({
           </button>
 
           <button 
-            onClick={() => setCurrentScreen('certificates')}
+            onClick={handleGenerateBsa}
             className="btn-gold"
             style={{ fontSize: '12px', padding: '7px 14px' }}
           >
@@ -108,7 +147,7 @@ export default function DocumentViewerPage({
           </button>
 
           <button 
-            onClick={() => window.open(api.evidence.getDownloadUrl(doc.id, 'master'), '_blank')}
+            onClick={handleDownload}
             className="btn-secondary"
             style={{ fontSize: '12px', padding: '7px 14px' }}
           >

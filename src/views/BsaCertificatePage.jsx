@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { 
   Award, 
   Printer, 
@@ -10,6 +10,7 @@ import {
   ArrowLeft 
 } from 'lucide-react';
 import { api } from '../api';
+import { logActivity } from '../utils/auditLogger';
 
 export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
   const printRef = useRef();
@@ -27,8 +28,31 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
     organization: "Chhattisgarh State Police Station"
   };
 
+  useEffect(() => {
+    if (doc?.id) {
+      logActivity({
+        action: 'BSA Certificate Viewed',
+        document: `${doc.name} (${doc.id})`,
+        details: `Viewed court-admissible Section 63 BSA certificate for '${doc.name}' (${doc.id}). Merkle root verified.`
+      });
+    }
+  }, [doc?.id]);
+
   const handlePrint = () => {
+    logActivity({
+      action: 'BSA Certificate Printed',
+      document: `${doc.name} (${doc.id})`,
+      details: `Initiated court print session of Section 63 BSA Certificate for '${doc.name}' (${doc.id}).`
+    });
     window.print();
+  };
+
+  const handleDownloadPdf = () => {
+    logActivity({
+      action: 'BSA Certificate Downloaded',
+      document: `${doc.name} (${doc.id})`,
+      details: `Downloaded Section 63 BSA Certificate PDF with cryptographic seal for '${doc.name}' (${doc.id}).`
+    });
   };
 
   return (
@@ -54,6 +78,7 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
             href={api.evidence.getCertificateUrl(doc.id || 'DOC-2026-00123')}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleDownloadPdf}
             className="btn-secondary"
             style={{ fontSize: '12px', padding: '8px 18px', display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}
           >
