@@ -3,7 +3,9 @@
 // Connects React frontend directly to the live backend engine
 // =============================================================================
 
-const API_BASE = '/api';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
+  ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/api`
+  : '/api';
 
 function getAuthHeader() {
   const token = typeof window !== 'undefined' ? sessionStorage.getItem('nyayavault_token') : null;
