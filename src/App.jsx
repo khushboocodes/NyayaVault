@@ -9,6 +9,7 @@ import DashboardPage from './views/DashboardPage';
 import CaseManagementPage from './views/CaseManagementPage';
 import CaseDetailsPage from './views/CaseDetailsPage';
 import DocumentIngestionPage from './views/DocumentIngestionPage';
+import DocumentListPage from './views/DocumentListPage';
 import DocumentViewerPage from './views/DocumentViewerPage';
 import VerificationPortalPage from './views/VerificationPortalPage';
 import ChainOfCustodyPage from './views/ChainOfCustodyPage';
@@ -442,7 +443,15 @@ export default function App() {
                 />
               )}
 
-              {(currentScreen === 'documents' || currentScreen === 'document-viewer') && (
+              {currentScreen === 'documents' && (
+                <DocumentListPage 
+                  documents={documents}
+                  setSelectedDoc={setSelectedDoc}
+                  setCurrentScreen={navigateToScreen}
+                />
+              )}
+
+              {currentScreen === 'document-viewer' && (
                 <DocumentViewerPage 
                   selectedDoc={selectedDoc}
                   setCurrentScreen={navigateToScreen}

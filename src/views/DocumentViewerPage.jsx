@@ -97,11 +97,12 @@ export default function DocumentViewerPage({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button 
-            onClick={() => setCurrentScreen('dashboard')}
+            onClick={() => setCurrentScreen('documents')}
             className="btn-secondary"
-            style={{ padding: '6px 10px', fontSize: '11px' }}
+            style={{ padding: '6px 12px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            title="Return to Documents Repository"
           >
-            ← Back
+            ← Back to Documents
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <FileText size={22} style={{ color: 'var(--gold-primary)' }} />
