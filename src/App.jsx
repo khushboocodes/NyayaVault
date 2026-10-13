@@ -207,26 +207,27 @@ export default function App() {
   };
 
   // Authentication: Successful login
-  const handleLogin = async (role) => {
+  const handleLogin = (role) => {
     const roleToSet = role || userRole || DEFAULT_ROLE;
     sessionStorage.setItem('nyayavault_auth', 'true');
     sessionStorage.setItem('nyayavault_role_id', roleToSet.id);
     setUserRole(roleToSet);
     setIsAuthenticated(true);
 
-    // Call live backend login to retrieve and persist real JWT token
-    try {
-      const authRes = await api.auth.login({ roleId: roleToSet.id });
-      if (authRes?.token) {
-        sessionStorage.setItem('nyayavault_token', authRes.token);
-      }
-    } catch (e) {
-      console.warn('Backend login token issue:', e.message);
-    }
-
-    // Replace login in history with dashboard so login is not accessible via Back
+    // Replace login in history with dashboard immediately for instant UI transition
     window.history.replaceState({ screen: 'dashboard' }, '', '/dashboard');
     _setCurrentScreen('dashboard');
+
+    // Call live backend login asynchronously to retrieve and persist real JWT token without blocking UI
+    api.auth.login({ roleId: roleToSet.id })
+      .then(authRes => {
+        if (authRes?.token) {
+          sessionStorage.setItem('nyayavault_token', authRes.token);
+        }
+      })
+      .catch(e => {
+        console.warn('Backend login token issue:', e.message);
+      });
   };
 
   // Explicit Logout: Clear authentication and return to Login
