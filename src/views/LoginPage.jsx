@@ -110,11 +110,18 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
         {/* LEFT PANEL: Ashoka Emblem Artwork (Preserved exactly as requested) */}
         <div className="login-modal-left">
           <div className="login-left-emblem-container">
-            <img 
-              src="/login-emblem.jpg" 
-              alt="State Emblem of India — Digital Evidence. Real Justice."
-              className="login-left-emblem-img"
-            />
+            <picture>
+              <source srcSet="/login-emblem.webp" type="image/webp" />
+              <img 
+                src="/login-emblem.jpg" 
+                alt="State Emblem of India — Digital Evidence. Real Justice."
+                className="login-left-emblem-img"
+                width="328"
+                height="492"
+                decoding="async"
+                fetchpriority="high"
+              />
+            </picture>
           </div>
         </div>
 

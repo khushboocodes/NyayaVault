@@ -11,6 +11,16 @@ import {
 import '../styles/landing.css';
 
 export default function LandingPage({ setCurrentScreen }) {
+  // Warm up login assets in cache on hover / touch so login page loads with 0ms delay
+  const prefetchLoginAssets = () => {
+    if (typeof window !== 'undefined') {
+      const img1 = new Image();
+      img1.src = '/login-bg.webp';
+      const img2 = new Image();
+      img2.src = '/login-emblem.webp';
+    }
+  };
+
   return (
     <div className="landing-page">
       
@@ -100,6 +110,8 @@ export default function LandingPage({ setCurrentScreen }) {
             {/* Primary CTA: Compact Rectangular Gold Button */}
             <button
               onClick={() => setCurrentScreen('login')}
+              onMouseEnter={prefetchLoginAssets}
+              onFocus={prefetchLoginAssets}
               className="landing-hero-cta-btn"
             >
               BUILDING A MORE TRUSTED JUSTICE SYSTEM →
@@ -312,6 +324,8 @@ export default function LandingPage({ setCurrentScreen }) {
             </button>
             <button
               onClick={() => setCurrentScreen('login')}
+              onMouseEnter={prefetchLoginAssets}
+              onFocus={prefetchLoginAssets}
               className="btn-secondary"
               style={{ padding: '12px 20px' }}
             >
