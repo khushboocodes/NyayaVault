@@ -446,6 +446,9 @@ export default function App() {
               {currentScreen === 'documents' && (
                 <DocumentListPage 
                   documents={documents}
+                  cases={cases}
+                  selectedCase={selectedCase}
+                  setSelectedCase={setSelectedCase}
                   setSelectedDoc={setSelectedDoc}
                   setCurrentScreen={navigateToScreen}
                 />
