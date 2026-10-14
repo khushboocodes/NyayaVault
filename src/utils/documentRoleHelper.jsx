@@ -10,7 +10,7 @@ export const ROLE_CONFIG = {
     code: 'IO',
     name: 'Investigating Officer',
     shortLabel: 'Police (IO)',
-    badgeLabel: '👮 Police Evidence',
+    badgeLabel: 'Police Evidence',
     icon: Shield,
     iconEmoji: '👮',
     accentColor: '#3B82F6',
@@ -53,7 +53,7 @@ export const ROLE_CONFIG = {
     code: 'FSL',
     name: 'Forensic Lab Analyst',
     shortLabel: 'Forensic Lab',
-    badgeLabel: '🔬 Forensic Report',
+    badgeLabel: 'Forensic Report',
     icon: Microscope,
     iconEmoji: '🔬',
     accentColor: '#10B981',
@@ -96,7 +96,7 @@ export const ROLE_CONFIG = {
     code: 'PROS',
     name: 'Public Prosecutor',
     shortLabel: 'Prosecutor',
-    badgeLabel: '⚖️ Prosecution Petition',
+    badgeLabel: 'Prosecution Petition',
     icon: Scale,
     iconEmoji: '⚖️',
     accentColor: '#8B5CF6',
@@ -139,7 +139,7 @@ export const ROLE_CONFIG = {
     code: 'JUDGE',
     name: 'District & Sessions Judge',
     shortLabel: 'Sessions Court',
-    badgeLabel: '🏛️ Judicial Order',
+    badgeLabel: 'Judicial Order',
     icon: Landmark,
     iconEmoji: '🏛️',
     accentColor: '#EF4444',
@@ -240,9 +240,10 @@ export function getDocumentRole(doc) {
 /**
  * Returns a styled role badge JSX component.
  */
-export function RoleBadge({ roleKey, compact = false, showSigner = false, signerText = '' }) {
-  const cfg = ROLE_CONFIG[roleKey] || ROLE_CONFIG.io;
-  const Icon = cfg.icon;
+export function RoleBadge({ roleKey, doc, compact = false, showSigner = false, signerText = '' }) {
+  const resolvedRole = roleKey || (doc ? getDocumentRole(doc) : 'io');
+  const cfg = ROLE_CONFIG[resolvedRole] || ROLE_CONFIG.io;
+  const signer = signerText || doc?.signer || doc?.organization || '';
 
   return (
     <div style={{ display: 'inline-flex', flexDirection: 'column', gap: '2px' }}>
@@ -266,9 +267,9 @@ export function RoleBadge({ roleKey, compact = false, showSigner = false, signer
         <span>{compact ? cfg.shortLabel : cfg.badgeLabel}</span>
       </span>
 
-      {showSigner && signerText && (
+      {showSigner && signer && (
         <span style={{ fontSize: '10px', color: 'var(--text-muted)', paddingLeft: '2px' }}>
-          {signerText.split('(')[0].trim()}
+          {signer.split('(')[0].trim()}
         </span>
       )}
     </div>

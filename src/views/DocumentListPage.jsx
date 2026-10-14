@@ -34,10 +34,8 @@ export default function DocumentListPage({
   setCurrentScreen,
   userRole
 }) {
-  // Active selected ongoing case (defaults to currently selected case or the first active case)
-  const [activeCaseId, setActiveCaseId] = useState(() => {
-    return selectedCase?.id || (cases.length > 0 ? cases[0].id : 'FIR-2026-001');
-  });
+  // Active selected ongoing case (defaults to ALL for sovereign consolidated repository view)
+  const [activeCaseId, setActiveCaseId] = useState('ALL');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
@@ -235,6 +233,9 @@ export default function DocumentListPage({
                   cursor: 'pointer'
                 }}
               >
+                <option value="ALL">
+                  🌐 ALL ONGOING CASES (Consolidated Sovereign View - {documents.length} Total Documents)
+                </option>
                 {cases.map((c) => {
                   const docCount = documents.filter(d => d.caseId === c.id).length;
                   return (
@@ -243,9 +244,6 @@ export default function DocumentListPage({
                     </option>
                   );
                 })}
-                <option value="ALL">
-                  🌐 ALL ONGOING CASES (Consolidated Sovereign View - {documents.length} Total Documents)
-                </option>
               </select>
             </div>
 
