@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { logActivity } from '../utils/auditLogger';
+import { getDocumentRole, RoleBadge, ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function DocumentListPage({
   documents = [],
@@ -30,7 +31,8 @@ export default function DocumentListPage({
   selectedCase,
   setSelectedCase,
   setSelectedDoc,
-  setCurrentScreen
+  setCurrentScreen,
+  userRole
 }) {
   // Active selected ongoing case (defaults to currently selected case or the first active case)
   const [activeCaseId, setActiveCaseId] = useState(() => {
@@ -40,6 +42,7 @@ export default function DocumentListPage({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('all');
   const [copiedHashId, setCopiedHashId] = useState(null);
 
   // Find the active case object
@@ -54,10 +57,17 @@ export default function DocumentListPage({
     }
   };
 
-  // Filter documents: First by selected ongoing case, then by search, type, and status
+  // Filter documents: First by selected ongoing case, then by search, type, status, and depositor role
   const caseDocuments = activeCaseId === 'ALL'
     ? documents
     : documents.filter(d => d.caseId === activeCaseId);
+
+  // Role deposition statistics for the active docket
+  const countAll = caseDocuments.length;
+  const countIO = caseDocuments.filter(d => getDocumentRole(d) === 'io').length;
+  const countFSL = caseDocuments.filter(d => getDocumentRole(d) === 'fsl').length;
+  const countProsecutor = caseDocuments.filter(d => getDocumentRole(d) === 'prosecutor').length;
+  const countJudge = caseDocuments.filter(d => getDocumentRole(d) === 'judge').length;
 
   const filteredDocs = caseDocuments.filter(doc => {
     const term = searchTerm.toLowerCase();
@@ -68,13 +78,15 @@ export default function DocumentListPage({
       doc.caseTitle?.toLowerCase().includes(term) ||
       doc.type?.toLowerCase().includes(term) ||
       doc.signer?.toLowerCase().includes(term) ||
+      doc.organization?.toLowerCase().includes(term) ||
       doc.sha256?.toLowerCase().includes(term)
     );
 
     const matchesType = selectedType === 'all' || doc.type?.toLowerCase() === selectedType.toLowerCase();
     const matchesStatus = selectedStatus === 'all' || doc.status?.toLowerCase() === selectedStatus.toLowerCase();
+    const matchesRole = selectedRoleFilter === 'all' || getDocumentRole(doc) === selectedRoleFilter;
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus && matchesRole;
   });
 
   // Extract unique types for the filter
@@ -173,7 +185,7 @@ export default function DocumentListPage({
           style={{ padding: '9px 18px', fontSize: '13px' }}
         >
           <Upload size={15} />
-          <span>Upload New Evidence</span>
+          <span>{ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || 'Upload New Evidence'}</span>
         </button>
       </div>
 
@@ -323,6 +335,33 @@ export default function DocumentListPage({
           {/* Filters group */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
             
+            {/* Filter by Depositor Role Dropdown (PROMINENT USER REQUEST) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontSize: '11px', color: 'var(--gold-light)', textTransform: 'uppercase', fontWeight: 700 }}>
+                Uploaded By:
+              </span>
+              <select 
+                value={selectedRoleFilter}
+                onChange={e => setSelectedRoleFilter(e.target.value)}
+                className="nyaya-select"
+                style={{ 
+                  fontSize: '12px', 
+                  padding: '6px 12px',
+                  background: 'var(--bg-surface-elevated)',
+                  border: selectedRoleFilter !== 'all' ? '1.5px solid var(--gold-primary)' : '1px solid var(--border-subtle)',
+                  color: selectedRoleFilter !== 'all' ? 'var(--gold-light)' : '#FFF',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="all">🌐 All Depositors ({countAll})</option>
+                <option value="io">👮 Police (IO) [{countIO}]</option>
+                <option value="fsl">🔬 Forensic Lab (FSL) [{countFSL}]</option>
+                <option value="prosecutor">⚖️ Public Prosecutor [{countProsecutor}]</option>
+                <option value="judge">🏛️ Court / Judge [{countJudge}]</option>
+              </select>
+            </div>
+
             {/* Filter by Type */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Type:</span>
@@ -355,12 +394,13 @@ export default function DocumentListPage({
             </div>
 
             {/* Clear filters button */}
-            {(searchTerm || selectedType !== 'all' || selectedStatus !== 'all') && (
+            {(searchTerm || selectedType !== 'all' || selectedStatus !== 'all' || selectedRoleFilter !== 'all') && (
               <button
                 onClick={() => {
                   setSearchTerm('');
                   setSelectedType('all');
                   setSelectedStatus('all');
+                  setSelectedRoleFilter('all');
                 }}
                 className="btn-secondary"
                 style={{ fontSize: '11px', padding: '6px 10px' }}
@@ -375,6 +415,124 @@ export default function DocumentListPage({
       </div>
 
       {/* =========================================================================
+          ROLE-BASED QUICK CLASSIFICATION PILLS (ONE-CLICK ROLE CLASSIFIER)
+          ========================================================================= */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          gap: '8px', 
+          flexWrap: 'wrap', 
+          alignItems: 'center',
+          padding: '2px 4px'
+        }}
+      >
+        <span style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: '4px', fontWeight: 700 }}>
+          Classify By Role:
+        </span>
+
+        <button
+          type="button"
+          onClick={() => setSelectedRoleFilter('all')}
+          className={`btn-secondary ${selectedRoleFilter === 'all' ? 'btn-outline-gold' : ''}`}
+          style={{ fontSize: '12px', padding: '5px 12px', borderRadius: '20px' }}
+        >
+          🌐 All Exhibits ({countAll})
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedRoleFilter('io')}
+          style={{
+            fontSize: '12px',
+            padding: '5px 12px',
+            borderRadius: '20px',
+            border: selectedRoleFilter === 'io' ? '1.5px solid #3B82F6' : '1px solid rgba(59, 130, 246, 0.3)',
+            background: selectedRoleFilter === 'io' ? 'rgba(30, 58, 138, 0.45)' : 'rgba(30, 58, 138, 0.15)',
+            color: '#93C5FD',
+            cursor: 'pointer',
+            fontWeight: selectedRoleFilter === 'io' ? 700 : 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>👮</span>
+          <span>Police (IO)</span>
+          <span style={{ fontSize: '11px', opacity: 0.85 }}>({countIO})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedRoleFilter('fsl')}
+          style={{
+            fontSize: '12px',
+            padding: '5px 12px',
+            borderRadius: '20px',
+            border: selectedRoleFilter === 'fsl' ? '1.5px solid #10B981' : '1px solid rgba(16, 185, 129, 0.3)',
+            background: selectedRoleFilter === 'fsl' ? 'rgba(5, 150, 105, 0.45)' : 'rgba(5, 150, 105, 0.15)',
+            color: '#6EE7B7',
+            cursor: 'pointer',
+            fontWeight: selectedRoleFilter === 'fsl' ? 700 : 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🔬</span>
+          <span>Forensic Lab</span>
+          <span style={{ fontSize: '11px', opacity: 0.85 }}>({countFSL})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedRoleFilter('prosecutor')}
+          style={{
+            fontSize: '12px',
+            padding: '5px 12px',
+            borderRadius: '20px',
+            border: selectedRoleFilter === 'prosecutor' ? '1.5px solid #8B5CF6' : '1px solid rgba(139, 92, 246, 0.3)',
+            background: selectedRoleFilter === 'prosecutor' ? 'rgba(124, 58, 237, 0.45)' : 'rgba(124, 58, 237, 0.15)',
+            color: '#C4B5FD',
+            cursor: 'pointer',
+            fontWeight: selectedRoleFilter === 'prosecutor' ? 700 : 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>⚖️</span>
+          <span>Prosecution</span>
+          <span style={{ fontSize: '11px', opacity: 0.85 }}>({countProsecutor})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSelectedRoleFilter('judge')}
+          style={{
+            fontSize: '12px',
+            padding: '5px 12px',
+            borderRadius: '20px',
+            border: selectedRoleFilter === 'judge' ? '1.5px solid #EF4444' : '1px solid rgba(239, 68, 68, 0.3)',
+            background: selectedRoleFilter === 'judge' ? 'rgba(220, 38, 38, 0.45)' : 'rgba(220, 38, 38, 0.15)',
+            color: '#FCA5A5',
+            cursor: 'pointer',
+            fontWeight: selectedRoleFilter === 'judge' ? 700 : 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s ease'
+          }}
+        >
+          <span>🏛️</span>
+          <span>Court / Judge</span>
+          <span style={{ fontSize: '11px', opacity: 0.85 }}>({countJudge})</span>
+        </button>
+      </div>
+
+      {/* =========================================================================
           DOCUMENTS DATA TABLE (STRICTLY FOR THE SELECTED CASE)
           ========================================================================= */}
       <div className="nyaya-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -382,12 +540,13 @@ export default function DocumentListPage({
           <table className="nyaya-table" style={{ margin: 0 }}>
             <thead>
               <tr>
-                <th style={{ width: '34%' }}>Document Name & Metadata</th>
-                <th style={{ width: '13%' }}>Case Docket</th>
-                <th style={{ width: '10%' }}>Type</th>
-                <th style={{ width: '17%' }}>SHA-256 Digest</th>
-                <th style={{ width: '12%' }}>Fabric Block</th>
-                <th style={{ width: '14%', textAlign: 'right' }}>Actions</th>
+                <th style={{ width: '28%' }}>Document Name & Metadata</th>
+                <th style={{ width: '11%' }}>Case Docket</th>
+                <th style={{ width: '17%' }}>Uploaded By / Role</th>
+                <th style={{ width: '9%' }}>Type</th>
+                <th style={{ width: '14%' }}>SHA-256 Digest</th>
+                <th style={{ width: '9%' }}>Fabric Block</th>
+                <th style={{ width: '12%', textAlign: 'right' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -452,6 +611,15 @@ export default function DocumentListPage({
                             {doc.caseTitle || 'Case Docket'}
                           </span>
                         </div>
+                      </td>
+
+                      {/* Uploaded By / Depositor Role (Role-based classification) */}
+                      <td>
+                        <RoleBadge 
+                          roleKey={getDocumentRole(doc)} 
+                          showSigner={true} 
+                          signerText={doc.signer || doc.organization} 
+                        />
                       </td>
 
                       {/* Evidence Type */}

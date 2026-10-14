@@ -62,39 +62,62 @@ export default function TopNav({
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Network & Offline Simulation Toggle */}
-        <button
-          onClick={() => setIsOffline(!isOffline)}
-          className="network-status-pill"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-pill)',
-            background: isOffline ? 'var(--status-pending-bg)' : 'var(--status-verified-bg)',
-            border: `1px solid ${isOffline ? 'var(--status-pending-border)' : 'var(--status-verified-border)'}`,
-            color: isOffline ? 'var(--status-pending)' : 'var(--status-verified)',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-          title="Click to toggle Network Simulation (Online vs Offline Field Mode)"
-        >
-          {isOffline ? (
-            <>
-              <WifiOff size={13} />
-              <span className="network-label-full">OFFLINE ({offlineQueueCount} Queued)</span>
-              <span className="network-label-short">OFFLINE ({offlineQueueCount})</span>
-            </>
-          ) : (
-            <>
-              <Wifi size={13} />
-              <span className="network-label-full">NETWORK ACTIVE (Fabric v2.5)</span>
-              <span className="network-label-short">ONLINE</span>
-            </>
-          )}
-        </button>
+        {/* Network & Offline Simulation Toggle (Hidden for FSL who operates in secure lab LAN) */}
+        {userRole?.id !== 'fsl' ? (
+          <button
+            onClick={() => setIsOffline(!isOffline)}
+            className="network-status-pill"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-pill)',
+              background: isOffline ? 'var(--status-pending-bg)' : 'var(--status-verified-bg)',
+              border: `1px solid ${isOffline ? 'var(--status-pending-border)' : 'var(--status-verified-border)'}`,
+              color: isOffline ? 'var(--status-pending)' : 'var(--status-verified)',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            title="Click to toggle Network Simulation (Online vs Offline Field Mode)"
+          >
+            {isOffline ? (
+              <>
+                <WifiOff size={13} />
+                <span className="network-label-full">OFFLINE ({offlineQueueCount} Queued)</span>
+                <span className="network-label-short">OFFLINE ({offlineQueueCount})</span>
+              </>
+            ) : (
+              <>
+                <Wifi size={13} />
+                <span className="network-label-full">NETWORK ACTIVE (Fabric v2.5)</span>
+                <span className="network-label-short">ONLINE</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <div
+            className="network-status-pill"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: 'var(--radius-pill)',
+              background: 'var(--status-verified-bg)',
+              border: '1px solid var(--status-verified-border)',
+              color: 'var(--status-verified)',
+              fontSize: '11px',
+              fontWeight: 600
+            }}
+            title="State Forensic Science Laboratory (SFSL) Dedicated NIC Gateway"
+          >
+            <Wifi size={13} />
+            <span className="network-label-full">LAB NETWORK SECURE (Fabric v2.5)</span>
+            <span className="network-label-short">ONLINE</span>
+          </div>
+        )}
 
         {/* Desktop-Only Public Verifier Shortcut */}
         <button
@@ -106,30 +129,32 @@ export default function TopNav({
           Verify Portal
         </button>
 
-        {/* Desktop-Only Offline Sync Hub Shortcut */}
-        <button
-          onClick={() => setCurrentScreen('mobile-app')}
-          className={`btn-secondary desktop-only-btn ${currentScreen === 'mobile-app' ? 'active' : ''}`}
-          style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-          title="Open Offline Field Sync Console"
-        >
-          <RefreshCw size={13} style={{ color: 'var(--gold-primary)' }} />
-          <span>Sync Hub</span>
-          {offlineQueueCount > 0 && (
-            <span 
-              style={{ 
-                background: 'var(--gold-primary)', 
-                color: '#0A0D14', 
-                fontSize: '10px', 
-                fontWeight: 700, 
-                padding: '1px 5px', 
-                borderRadius: '10px' 
-              }}
-            >
-              {offlineQueueCount}
-            </span>
-          )}
-        </button>
+        {/* Desktop-Only Offline Sync Hub Shortcut (Police IO only, Hidden for FSL) */}
+        {userRole?.id !== 'fsl' && (
+          <button
+            onClick={() => setCurrentScreen('mobile-app')}
+            className={`btn-secondary desktop-only-btn ${currentScreen === 'mobile-app' ? 'active' : ''}`}
+            style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            title="Open Offline Field Sync Console"
+          >
+            <RefreshCw size={13} style={{ color: 'var(--gold-primary)' }} />
+            <span>Sync Hub</span>
+            {offlineQueueCount > 0 && (
+              <span 
+                style={{ 
+                  background: 'var(--gold-primary)', 
+                  color: '#0A0D14', 
+                  fontSize: '10px', 
+                  fontWeight: 700, 
+                  padding: '1px 5px', 
+                  borderRadius: '10px' 
+                }}
+              >
+                {offlineQueueCount}
+              </span>
+            )}
+          </button>
+        )}
 
         {/* Notifications (Desktop only) */}
         <div 

@@ -19,7 +19,8 @@ import { getDocumentDossierContent } from '../data/dossierContentMap';
 
 export default function DocumentViewerPage({ 
   selectedDoc, 
-  setCurrentScreen 
+  setCurrentScreen,
+  userRole 
 }) {
   const [activeTab, setActiveTab] = useState('details');
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -139,14 +140,17 @@ export default function DocumentViewerPage({
             <span>Verify in Portal</span>
           </button>
 
-          <button 
-            onClick={handleGenerateBsa}
-            className="btn-gold"
-            style={{ fontSize: '12px', padding: '7px 14px' }}
-          >
-            <Award size={14} />
-            <span>Generate BSA Certificate</span>
-          </button>
+          {/* Generate BSA Certificate - Police Custodian / IO only, Hidden for FSL */}
+          {userRole?.id !== 'fsl' && (
+            <button 
+              onClick={handleGenerateBsa}
+              className="btn-gold"
+              style={{ fontSize: '12px', padding: '7px 14px' }}
+            >
+              <Award size={14} />
+              <span>Generate BSA Certificate</span>
+            </button>
+          )}
 
           <button 
             onClick={handleDownload}

@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut
 } from 'lucide-react';
+import { ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function Sidebar({ currentScreen, setCurrentScreen, userRole, onLogout }) {
   const allNavItems = [
@@ -70,7 +71,11 @@ export default function Sidebar({ currentScreen, setCurrentScreen, userRole, onL
                   flexShrink: 0 
                 }} 
               />
-              <span style={{ flex: 1 }}>{item.label}</span>
+              <span style={{ flex: 1 }}>
+                {item.id === 'upload' 
+                  ? (ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || item.label)
+                  : item.label}
+              </span>
 
               {item.highlight && (
                 <span 

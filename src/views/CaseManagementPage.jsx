@@ -17,7 +17,8 @@ export default function CaseManagementPage({
   cases, 
   documents = [],
   setCurrentScreen, 
-  setSelectedCase 
+  setSelectedCase,
+  userRole 
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPeriod, setFilterPeriod] = useState('30days');
@@ -53,18 +54,24 @@ export default function CaseManagementPage({
             Cases
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Showing {filteredCases.length} Registered Criminal Dockets • {documents.length} Cryptographically Anchored Exhibits across State Police Stations
+            {userRole?.id === 'fsl'
+              ? `Showing ${filteredCases.length} Registered Criminal Dockets Assigned for Forensic & Ballistic Examination`
+              : `Showing ${filteredCases.length} Registered Criminal Dockets • ${documents.length} Cryptographically Anchored Exhibits across State Police Stations`
+            }
           </p>
         </div>
 
-        <button 
-          onClick={() => setShowNewCaseModal(true)}
-          className="btn-gold" 
-          style={{ padding: '9px 18px', fontSize: '13px' }}
-        >
-          <PlusCircle size={15} />
-          <span>New Case</span>
-        </button>
+        {/* New Case Button - strictly hidden for FSL */}
+        {userRole?.id !== 'fsl' && (
+          <button 
+            onClick={() => setShowNewCaseModal(true)}
+            className="btn-gold" 
+            style={{ padding: '9px 18px', fontSize: '13px' }}
+          >
+            <PlusCircle size={15} />
+            <span>New Case</span>
+          </button>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

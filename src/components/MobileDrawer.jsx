@@ -15,6 +15,7 @@ import {
   LogOut,
   ChevronRight
 } from 'lucide-react';
+import { ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function MobileDrawer({ 
   isOpen, 
@@ -38,6 +39,11 @@ export default function MobileDrawer({
     { id: 'mobile-app', label: 'Offline Sync Hub', icon: RefreshCw },
     { id: 'settings', label: 'System Settings', icon: Settings }
   ];
+
+  const allowed = userRole?.allowedScreens;
+  const navItems = allowed 
+    ? allNavItems.filter(item => allowed.includes(item.id))
+    : allNavItems;
 
   const handleNavigate = (screenId) => {
     setCurrentScreen(screenId);
@@ -73,7 +79,7 @@ export default function MobileDrawer({
 
         {/* Navigation Items */}
         <nav className="mobile-drawer-nav">
-          {allNavItems.map((item) => {
+          {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentScreen === item.id || 
               (item.id === 'cases' && currentScreen === 'case-details') ||
@@ -86,7 +92,11 @@ export default function MobileDrawer({
                 className={`mobile-drawer-nav-item ${isActive ? 'active' : ''}`}
               >
                 <Icon size={18} style={{ color: isActive ? 'var(--gold-primary)' : 'inherit' }} />
-                <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
+                <span style={{ flex: 1, textAlign: 'left' }}>
+                  {item.id === 'upload' 
+                    ? (ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || item.label)
+                    : item.label}
+                </span>
                 {item.highlight && (
                   <span className="badge-status badge-gold" style={{ fontSize: '9px', padding: '2px 6px' }}>
                     New

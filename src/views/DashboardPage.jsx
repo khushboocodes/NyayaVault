@@ -11,15 +11,21 @@ import {
   ArrowRight,
   ExternalLink,
   CheckCircle2,
-  Clock
+  Clock,
+  Microscope,
+  GitBranch,
+  Scale,
+  Landmark
 } from 'lucide-react';
+import { getDocumentRole, RoleBadge, ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function DashboardPage({ 
   setCurrentScreen, 
   cases, 
   documents, 
   setSelectedCase,
-  setSelectedDoc 
+  setSelectedDoc,
+  userRole
 }) {
   const totalCasesCount = cases.length;
   const activeCasesCount = cases.filter(c => c.status === 'Active').length;
@@ -95,25 +101,85 @@ export default function DashboardPage({
           </div>
         </div>
 
-        {/* Metric 3: Pending Sync */}
-        <div 
-          className="nyaya-card" 
-          onClick={() => setCurrentScreen('mobile-app')}
-          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pending Sync</span>
-            <CloudOff size={18} style={{ color: 'var(--status-pending)' }} />
-          </div>
-          <div style={{ marginTop: '12px' }}>
-            <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--status-pending)', fontFamily: 'var(--font-mono)' }}>
-              {pendingDocsCount}
+        {/* Metric 3: Pending Sync (Police IO) vs Pending Analysis (FSL) */}
+        {/* Metric 3: Role-Tailored Operational Metric */}
+        {userRole?.id === 'fsl' ? (
+          <div 
+            className="nyaya-card" 
+            onClick={() => setCurrentScreen('documents')}
+            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pending Analysis</span>
+              <Microscope size={18} style={{ color: 'var(--gold-primary)' }} />
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              Offline Field Queue Ready
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--status-pending)', fontFamily: 'var(--font-mono)' }}>
+                3
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Exhibits Under Examination
+              </div>
             </div>
           </div>
-        </div>
+        ) : userRole?.id === 'prosecutor' ? (
+          <div 
+            className="nyaya-card" 
+            onClick={() => setCurrentScreen('documents')}
+            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pending Petitions</span>
+              <Scale size={18} style={{ color: '#C4B5FD' }} />
+            </div>
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: '#C4B5FD', fontFamily: 'var(--font-mono)' }}>
+                2
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Bail Rebuttals & Arguments Due
+              </div>
+            </div>
+          </div>
+        ) : userRole?.id === 'judge' ? (
+          <div 
+            className="nyaya-card" 
+            onClick={() => setCurrentScreen('documents')}
+            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Cause List Today</span>
+              <Landmark size={18} style={{ color: '#FCA5A5' }} />
+            </div>
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: '#FCA5A5', fontFamily: 'var(--font-mono)' }}>
+                4
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Sessions Remand & Bail Hearings
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div 
+            className="nyaya-card" 
+            onClick={() => setCurrentScreen('mobile-app')}
+            style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>Pending Sync</span>
+              <CloudOff size={18} style={{ color: 'var(--status-pending)' }} />
+            </div>
+            <div style={{ marginTop: '12px' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--status-pending)', fontFamily: 'var(--font-mono)' }}>
+                {pendingDocsCount}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Offline Field Queue Ready
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Metric 4: High Priority */}
         <div 
@@ -135,7 +201,7 @@ export default function DashboardPage({
           </div>
         </div>
 
-        {/* Quick Actions Panel on Right (Matching Image 2 Screen 5) */}
+        {/* Quick Actions Panel on Right (Role-Tailored) */}
         <div 
           className="nyaya-card" 
           style={{ 
@@ -157,17 +223,20 @@ export default function DashboardPage({
               style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
             >
               <Upload size={14} />
-              <span>Upload Document</span>
+              <span>{ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || 'Upload Document'}</span>
             </button>
 
-            <button
-              onClick={() => setCurrentScreen('cases')}
-              className="btn-secondary"
-              style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-            >
-              <PlusCircle size={14} style={{ color: 'var(--gold-primary)' }} />
-              <span>Create New Case</span>
-            </button>
+            {/* Create New Case - Police IO only */}
+            {userRole?.id === 'io' && (
+              <button
+                onClick={() => setCurrentScreen('cases')}
+                className="btn-secondary"
+                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+              >
+                <PlusCircle size={14} style={{ color: 'var(--gold-primary)' }} />
+                <span>Create New Case</span>
+              </button>
+            )}
 
             <button
               onClick={() => setCurrentScreen('verification')}
@@ -178,14 +247,29 @@ export default function DashboardPage({
               <span>Verify Document</span>
             </button>
 
-            <button
-              onClick={() => setCurrentScreen('audit')}
-              className="btn-secondary"
-              style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-            >
-              <ScrollText size={14} />
-              <span>View Audit Trail</span>
-            </button>
+            {/* Inspect Chain of Custody - shown for FSL */}
+            {userRole?.id === 'fsl' && (
+              <button
+                onClick={() => setCurrentScreen('custody')}
+                className="btn-secondary"
+                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+              >
+                <GitBranch size={14} style={{ color: 'var(--gold-primary)' }} />
+                <span>Inspect Chain of Custody</span>
+              </button>
+            )}
+
+            {/* View Audit Trail - Hidden for FSL */}
+            {userRole?.id !== 'fsl' && (
+              <button
+                onClick={() => setCurrentScreen('audit')}
+                className="btn-secondary"
+                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+              >
+                <ScrollText size={14} />
+                <span>View Audit Trail</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -221,6 +305,7 @@ export default function DashboardPage({
               <tr>
                 <th>Document Name</th>
                 <th>Case ID</th>
+                <th>Uploaded By</th>
                 <th>Type</th>
                 <th>Status</th>
                 <th>Uploaded On</th>
@@ -246,6 +331,9 @@ export default function DashboardPage({
                     </td>
                     <td onClick={() => handleOpenDoc(doc)} style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {doc.caseId}
+                    </td>
+                    <td onClick={() => handleOpenDoc(doc)}>
+                      <RoleBadge doc={doc} showSigner={false} />
                     </td>
                     <td onClick={() => handleOpenDoc(doc)}>
                       <span className="badge-status badge-gold">{doc.type}</span>

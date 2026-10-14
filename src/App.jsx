@@ -423,6 +423,7 @@ export default function App() {
                   documents={documents}
                   setCurrentScreen={navigateToScreen}
                   setSelectedCase={setSelectedCase}
+                  userRole={userRole}
                 />
               )}
 
@@ -432,6 +433,7 @@ export default function App() {
                   documents={documents}
                   setCurrentScreen={navigateToScreen}
                   setSelectedDoc={setSelectedDoc}
+                  userRole={userRole}
                 />
               )}
 
@@ -440,6 +442,7 @@ export default function App() {
                   setCurrentScreen={navigateToScreen}
                   addNewDocument={addNewDocument}
                   setSelectedDoc={setSelectedDoc}
+                  userRole={userRole}
                 />
               )}
 
@@ -451,6 +454,7 @@ export default function App() {
                   setSelectedCase={setSelectedCase}
                   setSelectedDoc={setSelectedDoc}
                   setCurrentScreen={navigateToScreen}
+                  userRole={userRole}
                 />
               )}
 
@@ -458,6 +462,7 @@ export default function App() {
                 <DocumentViewerPage 
                   selectedDoc={selectedDoc}
                   setCurrentScreen={navigateToScreen}
+                  userRole={userRole}
                 />
               )}
 

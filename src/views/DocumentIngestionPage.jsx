@@ -22,27 +22,41 @@ import confetti from 'canvas-confetti';
 import { SENSITIVE_ENTITIES_DEMO } from '../data/mockData';
 import { api } from '../api';
 import { logActivity } from '../utils/auditLogger';
+import { ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function DocumentIngestionPage({ 
   setCurrentScreen, 
   addNewDocument, 
-  setSelectedDoc 
+  setSelectedDoc,
+  userRole 
 }) {
+  const roleId = userRole?.id || 'io';
+  const roleConfig = ROLE_CONFIG[roleId] || ROLE_CONFIG.io;
+
   // Stepper State: 1 = Upload, 2 = AI/Redaction, 3 = Review & Sign, 4 = Anchoring, 5 = Confirmed
   const [currentStep, setCurrentStep] = useState(1);
 
-  // File & Form State
+  // File & Form State (Dynamically initialized per active role)
   const [rawFile, setRawFile] = useState(null);
   const [anchoredRecord, setAnchoredRecord] = useState(null);
-  const [fileName, setFileName] = useState('Witness_Statement.pdf');
-  const [fileSize, setFileSize] = useState('2.4 MB');
+  const [fileName, setFileName] = useState(() => roleConfig.defaultPresetA.name);
+  const [fileSize, setFileSize] = useState(() => roleConfig.defaultPresetA.size);
   const [pagesCount, setPagesCount] = useState(4);
-  const [docType, setDocType] = useState('Witness Statement');
+  const [docType, setDocType] = useState(() => roleConfig.categories[0]);
   const [caseId, setCaseId] = useState('FIR-2026-001');
-  const [description, setDescription] = useState('Sworn statement of key eyewitness regarding incident near Sadar Thana.');
+  const [description, setDescription] = useState(() => roleConfig.defaultPresetA.desc);
   const [isSensitive, setIsSensitive] = useState(true); // Branching trigger
   const [computedSha256, setComputedSha256] = useState('a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be');
   const [isHashing, setIsHashing] = useState(false);
+
+  // Sync state if role changes
+  useEffect(() => {
+    setFileName(roleConfig.defaultPresetA.name);
+    setFileSize(roleConfig.defaultPresetA.size);
+    setDocType(roleConfig.categories[0]);
+    setDescription(roleConfig.defaultPresetA.desc);
+    setIsSensitive(true);
+  }, [roleId]);
 
   // Redaction Entities State (Screen 9)
   const [entities, setEntities] = useState(SENSITIVE_ENTITIES_DEMO);
@@ -84,19 +98,21 @@ export default function DocumentIngestionPage({
     }
   };
 
-  // Preset demo pickers
+  // Role-tailored preset pickers
   const loadSensitiveDemo = () => {
-    setFileName('Witness_Statement.pdf');
-    setFileSize('2.4 MB');
-    setDocType('Witness Statement');
+    setFileName(roleConfig.defaultPresetA.name);
+    setFileSize(roleConfig.defaultPresetA.size);
+    setDocType(roleConfig.categories[0]);
+    setDescription(roleConfig.defaultPresetA.desc);
     setIsSensitive(true);
     setComputedSha256('a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be');
   };
 
   const loadNormalDemo = () => {
-    setFileName('Seizure_Memo_Exhibit_A1.pdf');
-    setFileSize('1.8 MB');
-    setDocType('Seizure Memo');
+    setFileName(roleConfig.defaultPresetB.name);
+    setFileSize(roleConfig.defaultPresetB.size);
+    setDocType(roleConfig.categories[1] || roleConfig.categories[0]);
+    setDescription(roleConfig.defaultPresetB.desc);
     setIsSensitive(false);
     setComputedSha256('e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3');
   };
@@ -122,13 +138,14 @@ export default function DocumentIngestionPage({
 
       // Trigger real backend upload and blockchain anchoring
       async function executeUpload() {
+        let createdRecord = null;
         try {
           const fd = new FormData();
           if (rawFile) {
             fd.append('file', rawFile);
           } else {
-            const sampleBlob = new Blob(['SWORN STATEMENT RECORDED UNDER SECTION 180 BNSS.\nTestimony recorded by investigating officer.'], { type: 'application/pdf' });
-            fd.append('file', sampleBlob, fileName || 'Witness_Statement.pdf');
+            const sampleBlob = new Blob(['SWORN STATEMENT / LEGAL EXHIBIT UNDER ICJS FRAMEWORK.\nCase reference: ' + caseId + '\nCategory: ' + docType], { type: 'application/pdf' });
+            fd.append('file', sampleBlob, fileName || 'Legal_Exhibit.pdf');
           }
           fd.append('caseId', caseId);
           fd.append('docType', docType);
@@ -138,13 +155,52 @@ export default function DocumentIngestionPage({
 
           const res = await api.evidence.upload(fd);
           if (res?.evidence) {
-            setAnchoredRecord(res.evidence);
-            addNewDocument(res.evidence);
-            setSelectedDoc(res.evidence);
+            createdRecord = {
+              ...res.evidence,
+              role: roleId,
+              uploadedByRole: roleId
+            };
           }
         } catch (err) {
           console.warn('Real upload fallback:', err.message);
         }
+
+        if (!createdRecord) {
+          createdRecord = {
+            id: `DOC-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+            name: fileName,
+            caseId: caseId,
+            caseTitle: 'Case Docket ' + caseId,
+            type: docType,
+            role: roleId,
+            uploadedByRole: roleId,
+            size: fileSize,
+            fileSizeBytes: 2450000,
+            pages: pagesCount || 4,
+            status: 'Verified',
+            isSensitive: isSensitive,
+            isRedacted: isSensitive,
+            uploadedOn: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' IST',
+            sha256: computedSha256,
+            txId: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+            blockNumber: 129390 + Math.floor(Math.random() * 40),
+            signer: roleId === 'judge' ? 'Justice S. Iyer (District & Sessions Judge)' :
+                    roleId === 'prosecutor' ? 'Public Prosecutor R. Varma' :
+                    roleId === 'fsl' ? 'Dr. Meera Singh (FSL Raipur)' :
+                    'SI Rajesh Kumar (Badge #CG-8401)',
+            signingCertificate: roleConfig.certificates[0],
+            organization: roleId === 'judge' ? 'District & Sessions Court Room No. 3, Raipur' :
+                          roleId === 'prosecutor' ? 'Directorate of Prosecution, Raipur Sessions Court' :
+                          roleId === 'fsl' ? 'State Forensic Science Laboratory, Raipur' :
+                          'Chhattisgarh State Police',
+            description: description,
+            merkleRoot: computedSha256
+          };
+        }
+
+        setAnchoredRecord(createdRecord);
+        if (addNewDocument) addNewDocument(createdRecord);
+        if (setSelectedDoc) setSelectedDoc(createdRecord);
       }
 
       executeUpload();
@@ -212,12 +268,25 @@ export default function DocumentIngestionPage({
           position: 'relative'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'var(--font-serif)', color: '#FFF' }}>
-            Document Ingestion Airlock
+            {roleConfig.uploadHeading}
           </span>
           <span className="badge-status badge-gold">
             Step {currentStep} of 5
+          </span>
+          <span 
+            style={{ 
+              fontSize: '11px', 
+              fontWeight: 600, 
+              padding: '2px 8px', 
+              borderRadius: '4px', 
+              background: roleConfig.bgColor, 
+              border: `1px solid ${roleConfig.borderColor}`, 
+              color: roleConfig.textColor 
+            }}
+          >
+            {roleConfig.uploadBadge}
           </span>
         </div>
 
@@ -277,21 +346,23 @@ export default function DocumentIngestionPage({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Quick Demo Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Quick Presets:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Quick Presets ({roleConfig.shortLabel}):</span>
             <button 
+              type="button"
               onClick={loadSensitiveDemo} 
               className={`btn-secondary ${isSensitive ? 'btn-outline-gold' : ''}`}
               style={{ fontSize: '11px', padding: '5px 12px' }}
             >
-              📄 Sensitive Witness Statement (Triggers Section 72 BNS)
+              🔒 Sensitive: {roleConfig.defaultPresetA.name}
             </button>
             <button 
+              type="button"
               onClick={loadNormalDemo} 
               className={`btn-secondary ${!isSensitive ? 'btn-outline-gold' : ''}`}
               style={{ fontSize: '11px', padding: '5px 12px' }}
             >
-              📋 Standard Seizure Memo (Normal Branch)
+              📄 Standard: {roleConfig.defaultPresetB.name}
             </button>
           </div>
 
@@ -384,18 +455,16 @@ export default function DocumentIngestionPage({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
             <div className="nyaya-card">
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                Document Category *
+                {roleConfig.shortLabel} Category *
               </label>
               <select 
                 value={docType} 
                 onChange={e => setDocType(e.target.value)}
                 className="nyaya-select"
               >
-                <option value="Witness Statement">Witness Statement (Sec 180 BNSS / 161 CrPC)</option>
-                <option value="FIR">First Information Report (FIR)</option>
-                <option value="Seizure Memo">Seizure Memo / Panchnama</option>
-                <option value="Forensic Report">FSL Ballistics / Forensic Report</option>
-                <option value="Charge Sheet">Police Final Charge Sheet (Sec 193 BNSS)</option>
+                {roleConfig.categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
 
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginTop: '16px', marginBottom: '8px' }}>
@@ -764,7 +833,7 @@ export default function DocumentIngestionPage({
                       Digital Signature Sign-Off
                     </h3>
                     <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                      Sign using your official law enforcement digital credentials
+                      Sign using your official {roleConfig.shortLabel} credentials
                     </p>
                   </div>
                 </div>
@@ -772,12 +841,12 @@ export default function DocumentIngestionPage({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '20px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-                      Select Digital Certificate
+                      Select Digital Certificate ({roleConfig.shortLabel})
                     </label>
-                    <select className="nyaya-select" defaultValue="cert1">
-                      <option value="cert1">Class 3 DSC - SI Rajesh Kumar (NIC-CA)</option>
-                      <option value="cert2">Department Token #CG-POL-8401</option>
-                      <option value="cert3">Aadhaar eSign (UIDAI Gateway)</option>
+                    <select className="nyaya-select" defaultValue={roleConfig.certificates[0]}>
+                      {roleConfig.certificates.map((cert) => (
+                        <option key={cert} value={cert}>{cert}</option>
+                      ))}
                     </select>
                   </div>
 

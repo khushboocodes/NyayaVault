@@ -528,7 +528,107 @@ export function getDocumentDossierContent(doc) {
     );
   }
 
-  // 9. Default: Sworn Witness / Deposition Statement
+  // 8. Prosecution Legal Submission / Petition
+  if (docId === 'DOC-2026-00105' || doc.type === 'Petition' || doc.type === 'Submission' || (doc.name || '').includes('Prosecution')) {
+    return (
+      <div className="dossier-body">
+        <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '2px solid #8C7B68', paddingBottom: '10px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '0.05em', color: '#1E293B' }}>
+            DIRECTORATE OF PROSECUTION • STATE OF CHHATTISGARH
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+            IN THE COURT OF DISTRICT & SESSIONS JUDGE, RAIPUR
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748B', marginTop: '3px' }}>
+            PETITION UNDER SECTION 480 BNSS (SEC 437/439 CrPC) — OBJECTION TO REGULAR BAIL
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '4px', fontSize: '11px', marginBottom: '14px' }}>
+          <div><strong>Case FIR Reference:</strong> {doc.caseId || 'FIR-2026-001'}</div>
+          <div><strong>Filing Officer:</strong> {doc.signer || 'Public Prosecutor R. Varma'}</div>
+          <div><strong>Date of Submission:</strong> {doc.uploadedOn || '28 Sep 2026'}</div>
+          <div><strong>Statutory Classification:</strong> Section 480 BNSS Rebuttal Memo</div>
+        </div>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          I. STATEMENT OF SUBSTANTIVE FACTS & OFFENCE GRAVITY
+        </h4>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          1. The State strongly opposes the bail application preferred by the accused. The offence falls under Section 103 BNS (Murder) punishable with capital punishment or life imprisonment.
+        </p>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          2. The State Forensic Science Laboratory (SFSL) Striation Match Report (Exhibit DOC-2026-00103) irrevocably establishes that the 7.65mm recovered cartridge bears identical microscopic land and groove marks with the weapon seized from the possession of the accused.
+        </p>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          II. WITNESS THREAT & SECTION 72 BNS STATUTORY GROUNDS
+        </h4>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          Release of the applicant poses direct jeopardy to the prime eyewitness whose identity has been protected under Section 72 BNS. There is substantial reasonable apprehension of tampering with electronic bitstream records anchored to the ICJS Hyperledger Fabric ledger.
+        </p>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          III. PRAYER BEFORE SESSIONS BENCH
+        </h4>
+        <div style={{ background: '#FEF3C7', borderLeft: '4px solid #D97706', padding: '10px', fontSize: '11px', lineHeight: 1.6 }}>
+          <em>"It is respectfully prayed that this Hon'ble Court may be pleased to <strong>DISMISS</strong> the bail application in the interest of justice and public order."</em>
+        </div>
+      </div>
+    );
+  }
+
+  // 9. Judicial Order / Roznamcha / Court Judgment
+  if (docId === 'DOC-2026-00106' || doc.type === 'Court Order' || (doc.name || '').includes('Judicial_Order') || (doc.name || '').includes('Roznamcha')) {
+    return (
+      <div className="dossier-body">
+        <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '2px solid #8C7B68', paddingBottom: '10px' }}>
+          <div style={{ fontSize: '15px', fontWeight: 800, letterSpacing: '0.05em', color: '#1E293B' }}>
+            IN THE COURT OF DISTRICT & SESSIONS JUDGE, RAIPUR (C.G.)
+          </div>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+            BEFORE: HON'BLE JUSTICE S. IYER, DISTRICT & SESSIONS JUDGE
+          </div>
+          <div style={{ fontSize: '11px', color: '#64748B', marginTop: '3px' }}>
+            DAILY COURT ORDER SHEET (ROZNAMCHA) • SECTION 480 BNSS BAIL PROCEEDINGS
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(0,0,0,0.03)', padding: '12px', borderRadius: '4px', fontSize: '11px', marginBottom: '14px' }}>
+          <div><strong>Sessions Case Docket:</strong> {doc.caseId || 'FIR-2026-001'}</div>
+          <div><strong>Presiding Judge:</strong> {doc.signer || 'Justice S. Iyer'}</div>
+          <div><strong>Order Pronounced:</strong> {doc.uploadedOn || '28 Sep 2026'}</div>
+          <div><strong>Electronic Ledger Block:</strong> #{doc.blockNumber || '128940'}</div>
+        </div>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          RECORD OF PROCEEDINGS & LIVE DIGITAL EVIDENCE SCRUTINY
+        </h4>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          1. The court convened for hearing on regular bail. Learned Public Prosecutor Shri R. Varma appeared for the State. Learned defense counsel appeared for the applicant.
+        </p>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          2. The court scrutinized the digital ballistic striation report (DOC-2026-00103) anchored on Hyperledger Fabric. Real-time verification confirmed that SHA-256 hash matches the immutable block header with zero discrepancy. Section 63 BSA certificate produced by the prosecution satisfies statutory requirements.
+        </p>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          JUDICIAL FINDINGS & REASONING
+        </h4>
+        <p style={{ fontSize: '11px', lineHeight: 1.6, marginBottom: '8px' }}>
+          Having regard to the prime facie forensic match connecting the firearm recovered from the applicant to the projectile found inside the victim's chest cavity, and considering the gravity of charge under Section 103 BNS, this Court finds no cogent ground to enlarge the applicant on bail.
+        </p>
+
+        <h4 style={{ fontSize: '12px', color: '#B45309', margin: '12px 0 6px 0', borderBottom: '1px solid #E2E8F0', paddingBottom: '3px' }}>
+          OPERATIVE JUDICIAL ORDER
+        </h4>
+        <div style={{ background: '#FEE2E2', borderLeft: '4px solid #EF4444', padding: '10px', fontSize: '11px', lineHeight: 1.6 }}>
+          <em>"The Bail Application filed under Section 480 BNSS stands <strong>REJECTED</strong>. The applicant shall remain in judicial remand. Investigating Officer directed to submit final charge sheet under Section 193 BNSS within the statutory timeline. Put up on 12-10-2026 for framing of charges."</em>
+        </div>
+      </div>
+    );
+  }
+
+  // 10. Default: Sworn Witness / Deposition Statement
   return (
     <div className="dossier-body">
       <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '2px solid #8C7B68', paddingBottom: '10px' }}>

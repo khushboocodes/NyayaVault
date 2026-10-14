@@ -40,15 +40,11 @@ export const ROLES = [
       'dashboard',
       'cases',
       'case-details',
-      'upload',
       'documents',
       'document-viewer',
+      'upload',
       'custody',
-      'mobile-app',
-      'settings',
-      'verification',
-      'certificates',
-      'audit'
+      'verification'
     ],
     defaultScreen: 'dashboard'
   },

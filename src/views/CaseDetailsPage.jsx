@@ -13,14 +13,17 @@ import {
   Download
 } from 'lucide-react';
 import { logActivity } from '../utils/auditLogger';
+import { getDocumentRole, RoleBadge, ROLE_CONFIG } from '../utils/documentRoleHelper';
 
 export default function CaseDetailsPage({ 
   selectedCase, 
   documents, 
   setCurrentScreen, 
-  setSelectedDoc 
+  setSelectedDoc,
+  userRole 
 }) {
   const [activeTab, setActiveTab] = useState('overview');
+  const [caseDocRoleFilter, setCaseDocRoleFilter] = useState('all');
 
   const caseData = selectedCase || {
     id: "FIR-2026-001",
@@ -51,6 +54,19 @@ export default function CaseDetailsPage({
   }, [caseData?.firNumber]);
 
   const caseDocs = documents.filter(d => d.caseId === caseData.firNumber || d.caseId === caseData.id);
+  const caseCountAll = caseDocs.length;
+  const caseCountIO = caseDocs.filter(d => getDocumentRole(d) === 'io').length;
+  const caseCountFSL = caseDocs.filter(d => getDocumentRole(d) === 'fsl').length;
+  const caseCountProsecutor = caseDocs.filter(d => getDocumentRole(d) === 'prosecutor').length;
+  const caseCountJudge = caseDocs.filter(d => getDocumentRole(d) === 'judge').length;
+
+  const displayedCaseDocs = caseDocRoleFilter === 'all'
+    ? caseDocs
+    : caseDocs.filter(d => getDocumentRole(d) === caseDocRoleFilter);
+
+  const availableTabs = userRole?.id === 'fsl'
+    ? ['overview', 'documents', 'custody']
+    : ['overview', 'documents', 'custody', 'audit', 'certificates'];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -94,13 +110,13 @@ export default function CaseDetailsPage({
           style={{ padding: '9px 18px', fontSize: '13px' }}
         >
           <Upload size={15} />
-          <span>Upload Document</span>
+          <span>{ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || 'Upload Document'}</span>
         </button>
       </div>
 
       {/* Tabs Row (Matching Screen 7) */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-subtle)' }}>
-        {['overview', 'documents', 'custody', 'audit', 'certificates'].map((tab) => {
+        {availableTabs.map((tab) => {
           const isActive = activeTab === tab;
           const label = tab === 'overview' ? 'Overview' :
                         tab === 'documents' ? `Documents (${caseDocs.length})` :
@@ -226,31 +242,58 @@ export default function CaseDetailsPage({
       {/* Tab: Documents List */}
       {(activeTab === 'documents' || activeTab === 'overview') && (
         <div className="nyaya-card" style={{ marginTop: '10px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#FFF' }}>
-              Attached Case Exhibits & Documents
-            </h3>
-            <button 
-              onClick={() => setCurrentScreen('upload')}
-              className="btn-outline-gold"
-              style={{ fontSize: '11px', padding: '4px 10px' }}
-            >
-              + Ingest New Exhibit
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#FFF' }}>
+                Attached Case Exhibits & Documents ({displayedCaseDocs.length})
+              </h3>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Immutable electronic records anchored to Hyperledger Fabric for {caseData.firNumber}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', color: 'var(--gold-light)', textTransform: 'uppercase', fontWeight: 700 }}>
+                  Uploaded By:
+                </span>
+                <select
+                  value={caseDocRoleFilter}
+                  onChange={e => setCaseDocRoleFilter(e.target.value)}
+                  className="nyaya-select"
+                  style={{ fontSize: '12px', padding: '5px 10px', fontWeight: 600, background: 'var(--bg-surface-elevated)' }}
+                >
+                  <option value="all">🌐 All Roles ({caseCountAll})</option>
+                  <option value="io">👮 Police (IO) [{caseCountIO}]</option>
+                  <option value="fsl">🔬 Forensic Lab [{caseCountFSL}]</option>
+                  <option value="prosecutor">⚖️ Prosecution [{caseCountProsecutor}]</option>
+                  <option value="judge">🏛️ Court / Judge [{caseCountJudge}]</option>
+                </select>
+              </div>
+
+              <button 
+                onClick={() => setCurrentScreen('upload')}
+                className="btn-outline-gold"
+                style={{ fontSize: '11px', padding: '5px 12px' }}
+              >
+                + {ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || 'Ingest Exhibit'}
+              </button>
+            </div>
           </div>
 
           <table className="nyaya-table">
             <thead>
               <tr>
                 <th>Document Name</th>
+                <th>Uploaded By / Role</th>
                 <th>Type</th>
                 <th>SHA-256 Digest</th>
                 <th>Status</th>
-                <th>Action</th>
+                <th style={{ textAlign: 'right' }}>Action</th>
               </tr>
             </thead>
             <tbody>
-              {caseDocs.map((doc) => (
+              {displayedCaseDocs.map((doc) => (
                 <tr key={doc.id} style={{ cursor: 'pointer' }}>
                   <td onClick={() => { setSelectedDoc(doc); setCurrentScreen('document-viewer'); }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -258,6 +301,14 @@ export default function CaseDetailsPage({
                       <span style={{ fontWeight: 600, color: '#FFF' }}>{doc.name}</span>
                       {doc.isSensitive && <span className="badge-status badge-bns">Sec 72 BNS</span>}
                     </div>
+                  </td>
+                  <td>
+                    <RoleBadge 
+                      roleKey={getDocumentRole(doc)} 
+                      compact={true} 
+                      showSigner={true} 
+                      signerText={doc.signer || doc.organization} 
+                    />
                   </td>
                   <td>
                     <span className="badge-status badge-gold">{doc.type}</span>
@@ -270,7 +321,7 @@ export default function CaseDetailsPage({
                       <CheckCircle2 size={11} /> {doc.status}
                     </span>
                   </td>
-                  <td>
+                  <td style={{ textAlign: 'right' }}>
                     <button 
                       onClick={() => { setSelectedDoc(doc); setCurrentScreen('document-viewer'); }}
                       className="btn-outline-gold"
