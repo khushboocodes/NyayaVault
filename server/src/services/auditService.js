@@ -1,4 +1,5 @@
 import { db } from '../db/database.js';
+import { isTursoConfigured, executeTurso } from '../db/turso.js';
 
 export class AuditService {
   /**
@@ -48,6 +49,27 @@ export class AuditService {
         ipAddress,
         macHash
       );
+
+      // Asynchronously mirror to Turso Cloud SQLite for permanent cloud persistence
+      if (isTursoConfigured) {
+        executeTurso(`
+          INSERT INTO audit_trail (
+            id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          id,
+          nowStr,
+          user,
+          userRole,
+          organization,
+          action,
+          document,
+          result,
+          details,
+          ipAddress,
+          macHash
+        ]).catch(e => console.warn('Turso audit background sync notice:', e.message));
+      }
 
       return {
         id,

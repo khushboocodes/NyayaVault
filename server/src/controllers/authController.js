@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/database.js';
 import { config } from '../config/env.js';
+import { AuditService } from '../services/auditService.js';
 
 export class AuthController {
   static login(req, res) {
@@ -33,24 +34,18 @@ export class AuthController {
       { expiresIn: config.jwtExpiresIn }
     );
 
-    // Record audit event
-    const auditId = `AUD-${Date.now().toString().slice(-4)}`;
-    db.prepare(`
-      INSERT INTO audit_trail (id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      auditId,
-      new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-      user.full_name,
-      user.role_title,
-      user.agency_name,
-      'User Authenticated',
-      'System Portal',
-      'Success',
-      `Logged in as ${user.role_title} with 2FA verified`,
-      req.ip || '127.0.0.1',
-      'e2b4...8f1a'
-    );
+    // Record audit event through AuditService (persisted to Turso Cloud)
+    AuditService.log({
+      user: user.full_name,
+      userRole: user.role_title,
+      organization: user.agency_name,
+      action: 'User Authenticated',
+      document: 'System Portal',
+      result: 'Success',
+      details: `Logged in as ${user.role_title} with 2FA verified`,
+      ipAddress: req.ip || '127.0.0.1',
+      macHash: 'e2b4...8f1a'
+    });
 
     const { password_hash, ...safeUser } = user;
     return res.json({

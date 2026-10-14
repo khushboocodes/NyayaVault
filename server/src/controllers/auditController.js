@@ -1,11 +1,49 @@
 import { db } from '../db/database.js';
 import { AuditService } from '../services/auditService.js';
+import { isTursoConfigured, queryTurso, executeTurso } from '../db/turso.js';
 
 export class AuditController {
-  static getAuditTrail(req, res) {
-    const logs = db.prepare('SELECT * FROM audit_trail ORDER BY created_at DESC LIMIT 200').all();
+  static async getAuditTrail(req, res) {
+    let cloudLogs = [];
 
-    const formatted = logs.map(l => ({
+    // 1. Query Turso Cloud SQLite if configured
+    if (isTursoConfigured) {
+      try {
+        const rows = await queryTurso('SELECT * FROM audit_trail ORDER BY created_at DESC LIMIT 200');
+        if (rows && rows.length > 0) {
+          cloudLogs = rows;
+        }
+      } catch (err) {
+        console.warn('Turso audit trail fetch fallback:', err.message);
+      }
+    }
+
+    // 2. Query Local SQLite
+    let localLogs = [];
+    try {
+      localLogs = db.prepare('SELECT * FROM audit_trail ORDER BY created_at DESC LIMIT 200').all();
+    } catch (e) {
+      localLogs = [];
+    }
+
+    // 3. Merge Cloud + Local logs, deduplicated by ID (Cloud priority)
+    const logMap = new Map();
+    for (const l of cloudLogs) {
+      if (l.id) logMap.set(l.id, l);
+    }
+    for (const l of localLogs) {
+      if (l.id && !logMap.has(l.id)) {
+        logMap.set(l.id, l);
+      }
+    }
+
+    const merged = Array.from(logMap.values()).sort((a, b) => {
+      const dateA = new Date(a.created_at || a.timestamp || 0).getTime();
+      const dateB = new Date(b.created_at || b.timestamp || 0).getTime();
+      return dateB - dateA;
+    });
+
+    const formatted = merged.map(l => ({
       id: l.id,
       timestamp: l.timestamp,
       user: l.user,
@@ -19,7 +57,7 @@ export class AuditController {
       macHash: l.mac_hash
     }));
 
-    return res.json({ auditTrail: formatted });
+    return res.json({ auditTrail: formatted, source: isTursoConfigured ? 'turso_cloud' : 'local_sqlite' });
   }
 
   static createAuditLog(req, res) {
@@ -46,4 +84,30 @@ export class AuditController {
       audit: created
     });
   }
+
+  /**
+   * Delete an audit trail log entry from both Turso Cloud and local SQLite.
+   */
+  static async deleteAuditLog(req, res) {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ error: 'Audit Log ID is required.' });
+    }
+
+    try {
+      // 1. Delete from local SQLite
+      db.prepare('DELETE FROM audit_trail WHERE id = ?').run(id);
+
+      // 2. Delete from Turso Cloud SQLite if configured
+      if (isTursoConfigured) {
+        await executeTurso('DELETE FROM audit_trail WHERE id = ?', [id]);
+      }
+
+      return res.json({ message: `Audit log ${id} deleted successfully.`, id });
+    } catch (err) {
+      console.error('Failed to delete audit log:', err.message);
+      return res.status(500).json({ error: 'Failed to delete audit log: ' + err.message });
+    }
+  }
 }
+

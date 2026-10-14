@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { config } from './config/env.js';
 import { initDatabase } from './db/database.js';
+import { isTursoConfigured, ensureTursoAuditSeeded } from './db/turso.js';
 import { BlockchainService } from './services/blockchainService.js';
 
 import authRoutes from './routes/authRoutes.js';
@@ -60,7 +61,12 @@ async function startServer() {
     console.log('1. Initializing native database & seed data...');
     initDatabase();
 
-    console.log('2. Initializing blockchain engine...');
+    if (isTursoConfigured) {
+      console.log('2. Verifying Turso Cloud persistent ledger...');
+      ensureTursoAuditSeeded().catch(e => console.warn('Turso seeding warning:', e.message));
+    }
+
+    console.log('3. Initializing blockchain engine...');
     await BlockchainService.initialize();
 
     app.listen(config.port, () => {

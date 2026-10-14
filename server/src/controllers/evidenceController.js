@@ -173,24 +173,18 @@ export class EvidenceController {
         anchorResult.txId
       );
 
-      // 7. Record Audit Trail Event
-      const audId = `AUD-${Date.now().toString().slice(-4)}`;
-      db.prepare(`
-        INSERT INTO audit_trail (
-          id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Success', ?, ?, ?)
-      `).run(
-        audId,
-        nowStr,
-        officer,
-        req.user ? req.user.role_title : 'Investigating Officer',
-        org,
-        'Evidence Ingested & Anchored',
-        evidenceId,
-        `Master Hash: ${masterSha256.slice(0, 16)}... anchored to block #${anchorResult.blockNumber}.`,
-        req.ip || '127.0.0.1',
-        'f8a1...4d6e'
-      );
+      // 7. Record Audit Trail Event (persisted to Turso Cloud)
+      AuditService.log({
+        user: officer,
+        userRole: req.user ? req.user.role_title : 'Investigating Officer',
+        organization: org,
+        action: 'Evidence Ingested & Anchored',
+        document: evidenceId,
+        result: 'Success',
+        details: `Master Hash: ${masterSha256.slice(0, 16)}... anchored to block #${anchorResult.blockNumber}.`,
+        ipAddress: req.ip || '127.0.0.1',
+        macHash: 'f8a1...4d6e'
+      });
 
       // Return complete evidence payload
       const createdEvidence = db.prepare('SELECT * FROM evidence_records WHERE id = ?').get(evidenceId);

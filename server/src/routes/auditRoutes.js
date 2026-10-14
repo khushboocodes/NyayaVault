@@ -25,5 +25,6 @@ function optionalAuth(req, res, next) {
 
 router.get('/', AuditController.getAuditTrail);
 router.post('/log', optionalAuth, AuditController.createAuditLog);
+router.delete('/:id', optionalAuth, AuditController.deleteAuditLog);
 
 export default router;
