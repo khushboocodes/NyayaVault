@@ -36,6 +36,25 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
         details: `Viewed court-admissible Section 63 BSA certificate for '${doc.name}' (${doc.id}). Merkle root verified.`
       });
     }
+
+    // Suppress browser default title in print headers
+    let originalTitle = '';
+    const handleBeforePrint = () => {
+      originalTitle = document.title;
+      document.title = ' ';
+    };
+    const handleAfterPrint = () => {
+      if (originalTitle) {
+        document.title = originalTitle;
+      }
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
   }, [doc?.id]);
 
   const handlePrint = () => {
@@ -44,7 +63,12 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
       document: `${doc.name} (${doc.id})`,
       details: `Initiated court print session of Section 63 BSA Certificate for '${doc.name}' (${doc.id}).`
     });
+    const originalTitle = document.title;
+    document.title = ' ';
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   const handleDownloadPdf = () => {
@@ -56,7 +80,7 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="bsa-certificate-page-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Top Header */}
       <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
@@ -101,6 +125,7 @@ export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
           ========================================================================= */}
       <div 
         ref={printRef}
+        className="bsa-certificate-parchment"
         style={{
           maxWidth: '860px',
           margin: '0 auto',

@@ -21,7 +21,7 @@ export default function TopNav({
   onOpenMobileDrawer
 }) {
   return (
-    <header className="app-topbar">
+    <header className="app-topbar no-print">
       
       {/* Mobile-Only Header Left: Menu Toggle + Brand */}
       <div className="mobile-header-brand">

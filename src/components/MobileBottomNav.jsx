@@ -22,7 +22,7 @@ export default function MobileBottomNav({
   ];
 
   return (
-    <nav className="mobile-bottom-bar" aria-label="Mobile Navigation">
+    <nav className="mobile-bottom-bar no-print" aria-label="Mobile Navigation">
       {navItems.map((item) => {
         const Icon = item.icon;
         const isActive = currentScreen === item.id || 

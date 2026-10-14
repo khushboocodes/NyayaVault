@@ -33,7 +33,7 @@ export default function Sidebar({ currentScreen, setCurrentScreen, userRole, onL
     : allNavItems;
 
   return (
-    <aside className="app-sidebar">
+    <aside className="app-sidebar no-print">
       {/* Brand Header */}
       <div 
         className="app-sidebar-logo" 

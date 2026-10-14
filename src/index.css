@@ -312,6 +312,11 @@ input, select, textarea {
    APP SHELL & NAVIGATION
    ========================================================================== */
 
+.app-root-wrapper {
+  min-height: 100vh;
+  background: var(--bg-canvas);
+}
+
 .app-container {
   display: flex;
   height: 100vh;
@@ -836,17 +841,131 @@ input, select, textarea {
 }
 
 /* ==========================================================================
-   PRINT STYLES FOR SECTION 63 BSA CERTIFICATE
+   PRINT STYLES FOR SECTION 63 BSA CERTIFICATE & PARCHMENT DOSSIERS
    ========================================================================== */
 
+@page {
+  size: A4 portrait;
+  margin: 0; /* Suppresses browser default title, date, URL, and page count headers/footers */
+}
+
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    box-sizing: border-box !important;
+  }
+
+  html,
   body {
-    background: #FFF !important;
-    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #FAF7F0 !important;
+    background-color: #FAF7F0 !important;
+    color: #14171A !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    overflow: hidden !important;
   }
-  .no-print {
+
+  /* 1. HIDE ALL APPLICATION NAVIGATION, CHROME, HEADERS, FOOTERS & BUTTONS */
+  header,
+  nav,
+  aside,
+  .app-sidebar,
+  .app-topbar,
+  .mobile-bottom-bar,
+  .mobile-header-brand,
+  .mobile-menu-toggle,
+  .mobile-drawer-overlay,
+  .global-offline-banner,
+  .network-status-pill,
+  .no-print,
+  button,
+  .btn-gold,
+  .btn-secondary,
+  .btn-outline-gold,
+  .mobile-action-btn,
+  .mobile-tab-btn {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    max-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
   }
+
+  /* 2. RESET APP SHELL CONTAINERS - STRICTLY REMOVE ALL BLACK CANVAS BACKGROUNDS */
+  #root,
+  .app-root-wrapper,
+  .app-container,
+  .app-main,
+  .app-content {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: #FAF7F0 !important;
+    background-color: #FAF7F0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+  }
+
+  .bsa-certificate-page-wrapper {
+    display: block !important;
+    width: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    margin: 0 !important;
+    padding: 8mm !important;
+    background: #FAF7F0 !important;
+    background-color: #FAF7F0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 3. FULL PAGE A4 SECTION 63 BSA CERTIFICATE (EXACT DESIGN, FULL HEIGHT) */
+  .bsa-certificate-parchment {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100% !important;
+    min-height: 100% !important;
+    max-height: 100% !important;
+    margin: 0 auto !important;
+    padding: 38px 46px !important;
+    border: 12px solid #EDE5D4 !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    background: #FAF7F0 !important;
+    background-color: #FAF7F0 !important;
+    box-sizing: border-box !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .print-only {
     display: block !important;
   }

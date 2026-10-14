@@ -315,9 +315,8 @@ export default function App() {
 
   // Standalone full-page screens (Unauthenticated or public screens)
   const isStandalonePage = !isAuthenticated || PUBLIC_SCREENS.has(currentScreen);
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-canvas)' }}>
+    <div className="app-root-wrapper">
       
       {/* 1. PUBLIC LANDING PAGE (Screen 1) */}
       {currentScreen === 'landing' && (
@@ -388,7 +387,7 @@ export default function App() {
 
             {/* Global Offline Field Banner */}
             {isOffline && (
-              <div className="global-offline-banner">
+              <div className="global-offline-banner no-print">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <WifiOff size={15} style={{ color: 'var(--status-pending)', flexShrink: 0 }} />
                   <span style={{ fontSize: '12px' }}>

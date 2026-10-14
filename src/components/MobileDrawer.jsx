@@ -45,7 +45,7 @@ export default function MobileDrawer({
   };
 
   return (
-    <div className="mobile-drawer-overlay" onClick={onClose}>
+    <div className="mobile-drawer-overlay no-print" onClick={onClose}>
       <div className="mobile-drawer-content" onClick={(e) => e.stopPropagation()}>
         
         {/* Drawer Header */}
