@@ -147,49 +147,115 @@ export class BsaCertificateService {
       maxWidth: width - 100
     });
 
+    const fontSansRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
     // 7. QR Code & HMAC Seal Generation
     const verifyUrl = `https://nyayavault.gov.in/verify?hash=${evidenceRecord.master_sha256}&tx=${evidenceRecord.tx_id}`;
-    const qrPngBuffer = await QRCode.toBuffer(verifyUrl, { width: 100, margin: 1 });
+    const qrPngBuffer = await QRCode.toBuffer(verifyUrl, { width: 120, margin: 1 });
     const qrImage = await pdfDoc.embedPng(qrPngBuffer);
 
     const sealData = `${evidenceRecord.id}:${evidenceRecord.master_sha256}:${evidenceRecord.tx_id}:${evidenceRecord.uploaded_on}`;
     const hmacSeal = CryptoService.computeHmacSeal(sealData);
 
-    const qrY = 48;
+    // Subtle divider above certification footer
+    page.drawLine({
+      start: { x: 45, y: 130 },
+      end: { x: width - 45, y: 130 },
+      thickness: 0.8,
+      color: rgb(0.72, 0.53, 0.16)
+    });
+
+    const qrY = 46;
     page.drawImage(qrImage, {
       x: 50,
       y: qrY,
-      width: 75,
-      height: 75
+      width: 70,
+      height: 70
     });
 
+    // Left Column: Verification & HMAC Judicial Seal
+    const leftTextX = 130;
     page.drawText('SCAN TO VERIFY LIVE ON LEDGER', {
-      x: 135,
-      y: qrY + 60,
+      x: leftTextX,
+      y: qrY + 58,
       size: 7.5,
       font: fontSans,
       color: rgb(0.04, 0.15, 0.27)
     });
 
-    page.drawText(`HMAC-SHA256 JUDICIAL SEAL:\n${hmacSeal}`, {
-      x: 135,
-      y: qrY + 45,
+    page.drawText('HMAC-SHA256 JUDICIAL SEAL:', {
+      x: leftTextX,
+      y: qrY + 46,
       size: 6.5,
+      font: fontSans,
+      color: rgb(0.3, 0.3, 0.3)
+    });
+
+    // Split 64-character hash into two clean 32-character lines to prevent right-column collision
+    const sealPart1 = hmacSeal.substring(0, 32);
+    const sealPart2 = hmacSeal.substring(32);
+
+    page.drawText(`${sealPart1}\n${sealPart2}`, {
+      x: leftTextX,
+      y: qrY + 34,
+      size: 6.2,
       font: fontMono,
-      color: rgb(0.4, 0.4, 0.4),
+      color: rgb(0.35, 0.35, 0.35),
       lineHeight: 9
     });
 
-    page.drawText(`ELECTRONICALLY CERTIFIED BY:\n${evidenceRecord.signer || 'SI Rajesh Kumar'}\nNon-Repudiation Certificate: NIC-CA-2026-X509`, {
-      x: 350,
-      y: qrY + 45,
+    page.drawText('Consensus Verified • NyayaVault Hyperledger Fabric', {
+      x: leftTextX,
+      y: qrY + 12,
+      size: 6,
+      font: fontSansRegular,
+      color: rgb(0.45, 0.45, 0.45)
+    });
+
+    // Right Column: Electronic Certification & Custody Sign-Off
+    const rightColX = 355;
+    page.drawText('ELECTRONICALLY CERTIFIED BY:', {
+      x: rightColX,
+      y: qrY + 58,
       size: 7.5,
+      font: fontSans,
+      color: rgb(0.04, 0.15, 0.27)
+    });
+
+    page.drawText(evidenceRecord.signer || 'SI Rajesh Kumar', {
+      x: rightColX,
+      y: qrY + 44,
+      size: 9.5,
+      font: fontSerif,
+      color: rgb(0.04, 0.15, 0.27)
+    });
+
+    page.drawText('Investigating Officer / Evidence Custodian', {
+      x: rightColX,
+      y: qrY + 33,
+      size: 7,
       font: fontSerifRegular,
-      color: rgb(0.1, 0.1, 0.1),
-      lineHeight: 11
+      color: rgb(0.25, 0.25, 0.25)
+    });
+
+    page.drawText('Non-Repudiation Certificate: NIC-CA-2026-X509', {
+      x: rightColX,
+      y: qrY + 22,
+      size: 6.5,
+      font: fontMono,
+      color: rgb(0.4, 0.4, 0.4)
+    });
+
+    page.drawText('[ Valid Digital Signature • Sec 63(4) BSA Compliant ]', {
+      x: rightColX,
+      y: qrY + 11,
+      size: 6.5,
+      font: fontSans,
+      color: rgb(0.08, 0.45, 0.25)
     });
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
   }
 }
+
