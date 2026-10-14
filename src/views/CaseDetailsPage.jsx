@@ -366,14 +366,22 @@ export default function CaseDetailsPage({
             Section 63 BSA Admissibility Dossiers
           </h3>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Generate and export official court-stamped Certificate of Electronic Evidence for FIR {caseData.firNumber}.
+            {userRole?.id === 'judge'
+              ? `Review and verify judicial admissibility certificate of electronic evidence for FIR ${caseData.firNumber}.`
+              : userRole?.id === 'prosecutor'
+              ? `Export trial evidentiary certificate under Section 63 BSA for prosecution filings in ${caseData.firNumber}.`
+              : `Generate and export official police-certified Certificate of Electronic Evidence for FIR ${caseData.firNumber}.`}
           </p>
           <button 
             onClick={() => setCurrentScreen('certificates')}
             className="btn-gold"
           >
             <Award size={15} />
-            <span>Generate Official Section 63 BSA Certificate</span>
+            <span>
+              {userRole?.id === 'judge' ? 'Verify Judicial Section 63 BSA Certificate' :
+               userRole?.id === 'prosecutor' ? 'Export Section 63 BSA Certificate for Trial' :
+               'Generate Official Section 63 BSA Certificate'}
+            </span>
           </button>
         </div>
       )}

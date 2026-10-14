@@ -62,8 +62,8 @@ export default function TopNav({
 
       {/* Right Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Network & Offline Simulation Toggle (Hidden for FSL who operates in secure lab LAN) */}
-        {userRole?.id !== 'fsl' ? (
+        {/* Network & Offline Simulation Toggle (Police IO field tool only) */}
+        {userRole?.id === 'io' ? (
           <button
             onClick={() => setIsOffline(!isOffline)}
             className="network-status-pill"
@@ -111,10 +111,18 @@ export default function TopNav({
               fontSize: '11px',
               fontWeight: 600
             }}
-            title="State Forensic Science Laboratory (SFSL) Dedicated NIC Gateway"
+            title={
+              userRole?.id === 'fsl' ? 'State Forensic Science Laboratory (SFSL) Dedicated NIC Gateway' :
+              userRole?.id === 'judge' ? 'District & Sessions Court Sovereign e-Courts Node' :
+              'Directorate of Prosecution Dedicated Network (NICNET)'
+            }
           >
             <Wifi size={13} />
-            <span className="network-label-full">LAB NETWORK SECURE (Fabric v2.5)</span>
+            <span className="network-label-full">
+              {userRole?.id === 'fsl' ? 'LAB NETWORK SECURE' :
+               userRole?.id === 'judge' ? 'COURT SECURE LAN' :
+               'PROSECUTION NETWORK'} (Fabric v2.5)
+            </span>
             <span className="network-label-short">ONLINE</span>
           </div>
         )}
@@ -129,8 +137,8 @@ export default function TopNav({
           Verify Portal
         </button>
 
-        {/* Desktop-Only Offline Sync Hub Shortcut (Police IO only, Hidden for FSL) */}
-        {userRole?.id !== 'fsl' && (
+        {/* Desktop-Only Offline Sync Hub Shortcut (Police IO only) */}
+        {userRole?.id === 'io' && (
           <button
             onClick={() => setCurrentScreen('mobile-app')}
             className={`btn-secondary desktop-only-btn ${currentScreen === 'mobile-app' ? 'active' : ''}`}

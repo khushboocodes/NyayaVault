@@ -5,20 +5,44 @@ import {
   Upload, 
   ShieldCheck, 
   RefreshCw,
-  Camera
+  Camera,
+  GitBranch,
+  FileText,
+  ScrollText
 } from 'lucide-react';
 
 export default function MobileBottomNav({ 
   currentScreen, 
   setCurrentScreen, 
-  offlineQueueCount = 0 
+  offlineQueueCount = 0,
+  userRole
 }) {
+  const roleId = userRole?.id || 'io';
+
+  // Role-appropriate 5th tab
+  const fifthTab = roleId === 'fsl'
+    ? { id: 'custody', label: 'Custody', icon: GitBranch }
+    : roleId === 'prosecutor'
+    ? { id: 'documents', label: 'Exhibits', icon: FileText }
+    : roleId === 'judge'
+    ? { id: 'audit', label: 'Audit', icon: ScrollText }
+    : { id: 'mobile-app', label: 'Sync', icon: RefreshCw, badge: offlineQueueCount };
+
+  // Role-appropriate action button label & icon
+  const actionTab = roleId === 'fsl'
+    ? { id: 'upload', label: 'Report', icon: Upload, isAction: true }
+    : roleId === 'prosecutor'
+    ? { id: 'upload', label: 'Petition', icon: Upload, isAction: true }
+    : roleId === 'judge'
+    ? { id: 'upload', label: 'Order', icon: Upload, isAction: true }
+    : { id: 'upload', label: 'Capture', icon: Camera, isAction: true };
+
   const navItems = [
     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
     { id: 'cases', label: 'Cases', icon: FolderLock },
-    { id: 'upload', label: 'Capture', icon: Camera, isAction: true },
+    actionTab,
     { id: 'verification', label: 'Verify', icon: ShieldCheck },
-    { id: 'mobile-app', label: 'Sync', icon: RefreshCw, badge: offlineQueueCount }
+    fifthTab
   ];
 
   return (

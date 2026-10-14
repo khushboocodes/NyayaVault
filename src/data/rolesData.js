@@ -21,7 +21,6 @@ export const ROLES = [
       'document-viewer',
       'custody',
       'mobile-app',
-      'settings',
       'verification',
       'certificates',
       'audit'
@@ -64,8 +63,6 @@ export const ROLES = [
       'documents',
       'document-viewer',
       'custody',
-      'mobile-app',
-      'settings',
       'verification',
       'certificates',
       'audit'
@@ -88,8 +85,6 @@ export const ROLES = [
       'documents',
       'document-viewer',
       'custody',
-      'mobile-app',
-      'settings',
       'verification',
       'certificates',
       'audit'

@@ -15,7 +15,9 @@ import {
   Microscope,
   GitBranch,
   Scale,
-  Landmark
+  Landmark,
+  Award,
+  RefreshCw
 } from 'lucide-react';
 import { getDocumentRole, RoleBadge, ROLE_CONFIG } from '../utils/documentRoleHelper';
 
@@ -217,6 +219,7 @@ export default function DashboardPage({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
+            {/* Primary Action Button - Role Tailored */}
             <button
               onClick={() => setCurrentScreen('upload')}
               className="btn-gold"
@@ -226,49 +229,124 @@ export default function DashboardPage({
               <span>{ROLE_CONFIG[userRole?.id || 'io']?.uploadActionLabel || 'Upload Document'}</span>
             </button>
 
-            {/* Create New Case - Police IO only */}
+            {/* Role 1: Police IO Quick Actions */}
             {userRole?.id === 'io' && (
-              <button
-                onClick={() => setCurrentScreen('cases')}
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-              >
-                <PlusCircle size={14} style={{ color: 'var(--gold-primary)' }} />
-                <span>Create New Case</span>
-              </button>
+              <>
+                <button
+                  onClick={() => setCurrentScreen('cases')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <PlusCircle size={14} style={{ color: 'var(--gold-primary)' }} />
+                  <span>Create New Case / FIR</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('verification')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
+                  <span>Verify Seized Exhibit Hash</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('mobile-app')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <RefreshCw size={14} style={{ color: 'var(--status-pending)' }} />
+                  <span>Offline Field Sync Queue ({pendingDocsCount})</span>
+                </button>
+              </>
             )}
 
-            <button
-              onClick={() => setCurrentScreen('verification')}
-              className="btn-secondary"
-              style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-            >
-              <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
-              <span>Verify Document</span>
-            </button>
-
-            {/* Inspect Chain of Custody - shown for FSL */}
+            {/* Role 2: Forensic Lab Analyst Quick Actions */}
             {userRole?.id === 'fsl' && (
-              <button
-                onClick={() => setCurrentScreen('custody')}
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-              >
-                <GitBranch size={14} style={{ color: 'var(--gold-primary)' }} />
-                <span>Inspect Chain of Custody</span>
-              </button>
+              <>
+                <button
+                  onClick={() => setCurrentScreen('verification')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
+                  <span>Verify Received Device Hash</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('custody')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <GitBranch size={14} style={{ color: 'var(--gold-primary)' }} />
+                  <span>Inspect Lab Evidence Custody</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('cases')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <FolderLock size={14} style={{ color: 'var(--gold-light)' }} />
+                  <span>View Forensic Requisitions</span>
+                </button>
+              </>
             )}
 
-            {/* View Audit Trail - Hidden for FSL */}
-            {userRole?.id !== 'fsl' && (
-              <button
-                onClick={() => setCurrentScreen('audit')}
-                className="btn-secondary"
-                style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
-              >
-                <ScrollText size={14} />
-                <span>View Audit Trail</span>
-              </button>
+            {/* Role 3: Public Prosecutor Quick Actions */}
+            {userRole?.id === 'prosecutor' && (
+              <>
+                <button
+                  onClick={() => setCurrentScreen('cases')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <FileText size={14} style={{ color: 'var(--gold-primary)' }} />
+                  <span>Scrutinize Police Chargesheets</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('certificates')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <Award size={14} style={{ color: '#C4B5FD' }} />
+                  <span>Export Sec 63 BSA Certificate</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('audit')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <ScrollText size={14} />
+                  <span>Inspect Tamper Audit Trail</span>
+                </button>
+              </>
+            )}
+
+            {/* Role 4: District & Sessions Judge Quick Actions */}
+            {userRole?.id === 'judge' && (
+              <>
+                <button
+                  onClick={() => setCurrentScreen('cases')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <Landmark size={14} style={{ color: '#FCA5A5' }} />
+                  <span>Inspect Today's Cause List</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('verification')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
+                  <span>Verify Blockchain Proof</span>
+                </button>
+                <button
+                  onClick={() => setCurrentScreen('audit')}
+                  className="btn-secondary"
+                  style={{ width: '100%', justifyContent: 'flex-start', padding: '8px 12px', fontSize: '12px' }}
+                >
+                  <ScrollText size={14} />
+                  <span>Judicial Audit Trail (BSA Sec 63)</span>
+                </button>
+              </>
             )}
           </div>
         </div>

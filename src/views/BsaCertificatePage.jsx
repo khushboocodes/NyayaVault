@@ -12,8 +12,9 @@ import {
 import { api } from '../api';
 import { logActivity } from '../utils/auditLogger';
 
-export default function BsaCertificatePage({ setCurrentScreen, selectedDoc }) {
+export default function BsaCertificatePage({ setCurrentScreen, selectedDoc, userRole }) {
   const printRef = useRef();
+  const roleId = userRole?.id || 'io';
 
   const doc = selectedDoc || {
     id: "DOC-2026-00123",

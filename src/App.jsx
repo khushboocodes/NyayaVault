@@ -475,6 +475,7 @@ export default function App() {
               {currentScreen === 'custody' && (
                 <ChainOfCustodyPage 
                   setCurrentScreen={navigateToScreen}
+                  userRole={userRole}
                 />
               )}
 
@@ -482,6 +483,7 @@ export default function App() {
                 <BsaCertificatePage 
                   setCurrentScreen={navigateToScreen}
                   selectedDoc={selectedDoc}
+                  userRole={userRole}
                 />
               )}
 
@@ -523,6 +525,7 @@ export default function App() {
               currentScreen={currentScreen} 
               setCurrentScreen={navigateToScreen} 
               offlineQueueCount={offlineQueueCount} 
+              userRole={userRole}
             />
           </div>
         </div>

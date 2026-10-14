@@ -15,14 +15,15 @@ import { INITIAL_CHAIN_OF_CUSTODY } from '../data/mockData';
 import { api } from '../api';
 import { logActivity } from '../utils/auditLogger';
 
-export default function ChainOfCustodyPage({ setCurrentScreen }) {
+export default function ChainOfCustodyPage({ setCurrentScreen, userRole }) {
   const [chain, setChain] = useState(INITIAL_CHAIN_OF_CUSTODY);
+  const roleId = userRole?.id || 'io';
 
   useEffect(() => {
     logActivity({
       action: 'Custody Chain Inspected',
       document: 'FIR-2026-001 / Witness_Statement.pdf',
-      details: 'Inspected chronological multi-agency chain of custody hops, ECDSA key signatures, and block timestamps.'
+      details: `Inspected chronological multi-agency chain of custody hops by ${userRole?.title || 'Officer'}.`
     });
 
     async function fetchCustody() {
@@ -36,7 +37,7 @@ export default function ChainOfCustodyPage({ setCurrentScreen }) {
       }
     }
     fetchCustody();
-  }, []);
+  }, [userRole]);
 
   const handleExportCertificate = () => {
     logActivity({
@@ -63,27 +64,63 @@ export default function ChainOfCustodyPage({ setCurrentScreen }) {
         }}
       >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#FFF', fontFamily: 'var(--font-serif)' }}>
               Chain of Custody
             </h2>
             <span className="badge-status badge-verified">
               <CheckCircle2 size={12} /> 6 Verifiable Hops
             </span>
+            {roleId === 'io' && (
+              <span className="badge-status badge-gold" style={{ fontSize: '10px' }}>
+                👮 Police Malkhana Custodian
+              </span>
+            )}
+            {roleId === 'fsl' && (
+              <span className="badge-status badge-gold" style={{ fontSize: '10px' }}>
+                🔬 Lab Intake & Handover
+              </span>
+            )}
+            {roleId === 'prosecutor' && (
+              <span className="badge-status badge-bns" style={{ fontSize: '10px' }}>
+                ⚖️ Prosecution Trial Inspection
+              </span>
+            )}
+            {roleId === 'judge' && (
+              <span className="badge-status badge-bns" style={{ fontSize: '10px' }}>
+                🏛️ Judicial Evidentiary Review
+              </span>
+            )}
           </div>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             FIR-2026-001 | Murder Investigation • Exhibit: Witness_Statement.pdf
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Action button for IO and FSL */}
+          {(roleId === 'io' || roleId === 'fsl') && (
+            <button 
+              onClick={() => alert(`Custody transfer protocol initiated under ISO/IEC 27037. Handover logged to Hyperledger Fabric for officer: ${userRole?.title}.`)}
+              className="btn-secondary"
+              style={{ fontSize: '12px', padding: '8px 14px' }}
+            >
+              <GitBranch size={14} style={{ color: 'var(--gold-primary)' }} />
+              <span>{roleId === 'fsl' ? 'Acknowledge Lab Intake' : 'Initiate Custody Handover'}</span>
+            </button>
+          )}
+
           <button 
-            onClick={() => setCurrentScreen('certificates')}
+            onClick={handleExportCertificate}
             className="btn-gold"
             style={{ fontSize: '12px', padding: '8px 16px' }}
           >
             <Award size={14} />
-            <span>Export Custody Certificate</span>
+            <span>
+              {roleId === 'judge' ? 'Verify Judicial Seal' :
+               roleId === 'prosecutor' ? 'Export Custody Dossier for Court' :
+               'Export Custody Certificate'}
+            </span>
           </button>
         </div>
       </div>

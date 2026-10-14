@@ -56,13 +56,17 @@ export default function CaseManagementPage({
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             {userRole?.id === 'fsl'
               ? `Showing ${filteredCases.length} Registered Criminal Dockets Assigned for Forensic & Ballistic Examination`
+              : userRole?.id === 'judge'
+              ? `Showing ${filteredCases.length} Judicial Trial Dockets under Sessions Court Cognizance`
+              : userRole?.id === 'prosecutor'
+              ? `Showing ${filteredCases.length} Active State Prosecution Files Under Criminal Scrutiny`
               : `Showing ${filteredCases.length} Registered Criminal Dockets • ${documents.length} Cryptographically Anchored Exhibits across State Police Stations`
             }
           </p>
         </div>
 
-        {/* New Case Button - strictly hidden for FSL */}
-        {userRole?.id !== 'fsl' && (
+        {/* New Case Button - strictly for Police IO */}
+        {userRole?.id === 'io' && (
           <button 
             onClick={() => setShowNewCaseModal(true)}
             className="btn-gold" 

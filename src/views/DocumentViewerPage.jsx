@@ -140,7 +140,7 @@ export default function DocumentViewerPage({
             <span>Verify in Portal</span>
           </button>
 
-          {/* Generate BSA Certificate - Police Custodian / IO only, Hidden for FSL */}
+          {/* Generate / Verify BSA Certificate - Hidden for FSL */}
           {userRole?.id !== 'fsl' && (
             <button 
               onClick={handleGenerateBsa}
@@ -148,7 +148,11 @@ export default function DocumentViewerPage({
               style={{ fontSize: '12px', padding: '7px 14px' }}
             >
               <Award size={14} />
-              <span>Generate BSA Certificate</span>
+              <span>
+                {userRole?.id === 'judge' ? 'Verify Admissibility' :
+                 userRole?.id === 'prosecutor' ? 'Export Trial Certificate' :
+                 'Generate BSA Certificate'}
+              </span>
             </button>
           )}
 
