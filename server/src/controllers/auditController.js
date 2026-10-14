@@ -1,6 +1,6 @@
 import { db } from '../db/database.js';
 import { AuditService } from '../services/auditService.js';
-import { isTursoConfigured, queryTurso, executeTurso } from '../db/turso.js';
+import { isTursoConfigured, queryTurso } from '../db/turso.js';
 
 export class AuditController {
   static async getAuditTrail(req, res) {
@@ -83,31 +83,6 @@ export class AuditController {
       message: 'Audit event recorded.',
       audit: created
     });
-  }
-
-  /**
-   * Delete an audit trail log entry from both Turso Cloud and local SQLite.
-   */
-  static async deleteAuditLog(req, res) {
-    const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({ error: 'Audit Log ID is required.' });
-    }
-
-    try {
-      // 1. Delete from local SQLite
-      db.prepare('DELETE FROM audit_trail WHERE id = ?').run(id);
-
-      // 2. Delete from Turso Cloud SQLite if configured
-      if (isTursoConfigured) {
-        await executeTurso('DELETE FROM audit_trail WHERE id = ?', [id]);
-      }
-
-      return res.json({ message: `Audit log ${id} deleted successfully.`, id });
-    } catch (err) {
-      console.error('Failed to delete audit log:', err.message);
-      return res.status(500).json({ error: 'Failed to delete audit log: ' + err.message });
-    }
   }
 }
 
