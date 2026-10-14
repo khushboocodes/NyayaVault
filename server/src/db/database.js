@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 import { config } from '../config/env.js';
+import { SEED_CASES, SEED_EVIDENCE } from './evidenceDataset.js';
 
 // Ensure storage directories exist
 const storageDir = path.dirname(config.databasePath);
@@ -155,267 +156,94 @@ export function initDatabase() {
 }
 
 function seedDefaultData() {
-  // Check if users already seeded
+  // 1. Seed 4 Institutional Personas if not present
   const userCheck = db.prepare('SELECT COUNT(*) as count FROM users').get();
-  if (userCheck.count > 0) return;
+  if (userCheck.count === 0) {
+    const defaultPassword = 'password123';
+    const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
 
-  const defaultPassword = 'password123';
-  const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
+    const seedUsers = [
+      {
+        id: 'usr-io-001',
+        username: 'io_officer.nyayavault',
+        full_name: 'SI Rajesh Kumar',
+        email: 'rajesh.kumar@cgpolice.gov.in',
+        password_hash: hashedPassword,
+        role_id: 'io',
+        role_code: 'IO',
+        role_title: 'Investigating Officer (IO)',
+        agency_name: 'Chhattisgarh State Police',
+        badge_number: 'CG-8401',
+        public_key: '0x04a91b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be'
+      },
+      {
+        id: 'usr-fsl-002',
+        username: 'forensic_analyst.nyayavault',
+        full_name: 'Dr. Meera Singh',
+        email: 'meera.singh@fsl.gov.in',
+        password_hash: hashedPassword,
+        role_id: 'fsl',
+        role_code: 'FSL',
+        role_title: 'Forensic Lab Analyst',
+        agency_name: 'State Forensic Science Laboratory, Raipur',
+        badge_number: 'FSL-2910',
+        public_key: '0x04b82c3d5f7b725772b95043aa21def5c6f90213982245f23d9b02c3d5f783cf'
+      },
+      {
+        id: 'usr-pros-003',
+        username: 'prosecutor.nyayavault',
+        full_name: 'Adv. R. Varma',
+        email: 'r.varma@prosecution.gov.in',
+        password_hash: hashedPassword,
+        role_id: 'prosecutor',
+        role_code: 'PROSECUTOR',
+        role_title: 'Public Prosecutor',
+        agency_name: 'Directorate of Prosecution, Raipur',
+        badge_number: 'PP-4401',
+        public_key: '0x04c93d4e6a8c836883ca6154bb32ef06d7a01324a93356a34e0c13d4e6a894da'
+      },
+      {
+        id: 'usr-judge-004',
+        username: 'judge.nyayavault',
+        full_name: 'Justice S. Iyer',
+        email: 's.iyer@ecourts.gov.in',
+        password_hash: hashedPassword,
+        role_id: 'judge',
+        role_code: 'JUDGE',
+        role_title: 'District & Sessions Judge',
+        agency_name: 'District & Sessions Court Room No. 3, Raipur',
+        badge_number: 'JUD-1002',
+        public_key: '0x04d04e5f7b9d947994db7265cc43f017e8b12435ba4467b45f1d24e5f7b905eb'
+      }
+    ];
 
-  // 1. Seed 4 Institutional Personas
-  const seedUsers = [
-    {
-      id: 'usr-io-001',
-      username: 'io_officer.nyayavault',
-      full_name: 'SI Rajesh Kumar',
-      email: 'rajesh.kumar@cgpolice.gov.in',
-      password_hash: hashedPassword,
-      role_id: 'io',
-      role_code: 'IO',
-      role_title: 'Investigating Officer (IO)',
-      agency_name: 'Chhattisgarh State Police',
-      badge_number: 'CG-8401',
-      public_key: '0x04a91b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be'
-    },
-    {
-      id: 'usr-fsl-002',
-      username: 'forensic_analyst.nyayavault',
-      full_name: 'Dr. Meera Singh',
-      email: 'meera.singh@fsl.gov.in',
-      password_hash: hashedPassword,
-      role_id: 'fsl',
-      role_code: 'FSL',
-      role_title: 'Forensic Lab Analyst',
-      agency_name: 'State Forensic Science Laboratory, Raipur',
-      badge_number: 'FSL-2910',
-      public_key: '0x04b82c3d5f7b725772b95043aa21def5c6f90213982245f23d9b02c3d5f783cf'
-    },
-    {
-      id: 'usr-pros-003',
-      username: 'prosecutor.nyayavault',
-      full_name: 'Adv. R. Varma',
-      email: 'r.varma@prosecution.gov.in',
-      password_hash: hashedPassword,
-      role_id: 'prosecutor',
-      role_code: 'PROSECUTOR',
-      role_title: 'Public Prosecutor',
-      agency_name: 'Directorate of Prosecution, Raipur',
-      badge_number: 'PP-4401',
-      public_key: '0x04c93d4e6a8c836883ca6154bb32ef06d7a01324a93356a34e0c13d4e6a894da'
-    },
-    {
-      id: 'usr-judge-004',
-      username: 'judge.nyayavault',
-      full_name: 'Justice S. Iyer',
-      email: 's.iyer@ecourts.gov.in',
-      password_hash: hashedPassword,
-      role_id: 'judge',
-      role_code: 'JUDGE',
-      role_title: 'District & Sessions Judge',
-      agency_name: 'District & Sessions Court Room No. 3, Raipur',
-      badge_number: 'JUD-1002',
-      public_key: '0x04d04e5f7b9d947994db7265cc43f017e8b12435ba4467b45f1d24e5f7b905eb'
+    const insertUser = db.prepare(`
+      INSERT INTO users (id, username, full_name, email, password_hash, role_id, role_code, role_title, agency_name, badge_number, public_key)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const u of seedUsers) {
+      insertUser.run(u.id, u.username, u.full_name, u.email, u.password_hash, u.role_id, u.role_code, u.role_title, u.agency_name, u.badge_number, u.public_key);
     }
-  ];
-
-  const insertUser = db.prepare(`
-    INSERT INTO users (id, username, full_name, email, password_hash, role_id, role_code, role_title, agency_name, badge_number, public_key)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  for (const u of seedUsers) {
-    insertUser.run(u.id, u.username, u.full_name, u.email, u.password_hash, u.role_id, u.role_code, u.role_title, u.agency_name, u.badge_number, u.public_key);
   }
 
-  // 2. Seed Default Cases
-  const seedCases = [
-    {
-      id: "FIR-2026-001",
-      fir_number: "FIR-2026-001",
-      case_title: "Murder Investigation",
-      police_station: "Chhattisgarh Sadar",
-      district: "Raipur",
-      state: "Chhattisgarh",
-      crime_head: "Section 103 BNS (Sec 302 IPC)",
-      investigating_officer: "SI Rajesh Kumar",
-      badge_number: "CG-8401",
-      date_of_registration: "12 Aug 2026, 14:45 IST",
-      status: "Active",
-      priority: "High"
-    },
-    {
-      id: "FIR-2026-002",
-      fir_number: "FIR-2026-002",
-      case_title: "Theft Case",
-      police_station: "Patna City",
-      district: "Patna",
-      state: "Bihar",
-      crime_head: "Section 303 BNS (Sec 379 IPC)",
-      investigating_officer: "Insp. Vikramaditya",
-      badge_number: "BR-2204",
-      date_of_registration: "18 Aug 2026, 10:15 IST",
-      status: "Active",
-      priority: "Normal"
-    },
-    {
-      id: "FIR-2026-003",
-      fir_number: "FIR-2026-003",
-      case_title: "Cyber Fraud & Extortion",
-      police_station: "Gwalior Thana",
-      district: "Gwalior",
-      state: "Madhya Pradesh",
-      crime_head: "Section 66D IT Act / Sec 318 BNS",
-      investigating_officer: "SI Neha Verma",
-      badge_number: "MP-5512",
-      date_of_registration: "25 Aug 2026, 16:20 IST",
-      status: "Pending",
-      priority: "High"
-    },
-    {
-      id: "FIR-2026-004",
-      fir_number: "FIR-2026-004",
-      case_title: "NDPS Seizure Operation",
-      police_station: "Gaya Kotwali",
-      district: "Gaya",
-      state: "Bihar",
-      crime_head: "Section 20 NDPS Act",
-      investigating_officer: "SI Rajesh Kumar",
-      badge_number: "CG-8401",
-      date_of_registration: "02 Sep 2026, 09:30 IST",
-      status: "Active",
-      priority: "Normal"
-    },
-    {
-      id: "FIR-2026-005",
-      fir_number: "FIR-2026-005",
-      case_title: "Illegal Arms Recovery",
-      police_station: "Ranchi Sadar",
-      district: "Ranchi",
-      state: "Jharkhand",
-      crime_head: "Section 25 Arms Act",
-      investigating_officer: "Insp. S. Soren",
-      badge_number: "JH-9011",
-      date_of_registration: "10 Sep 2026, 12:00 IST",
-      status: "Active",
-      priority: "Normal"
-    }
-  ];
-
+  // 2. Seed Master Cases (all 6 cases)
   const insertCase = db.prepare(`
-    INSERT INTO cases (id, fir_number, case_title, police_station, district, state, crime_head, investigating_officer, badge_number, date_of_registration, status, priority)
+    INSERT OR REPLACE INTO cases (id, fir_number, case_title, police_station, district, state, crime_head, investigating_officer, badge_number, date_of_registration, status, priority)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  for (const c of seedCases) {
+  for (const c of SEED_CASES) {
     insertCase.run(c.id, c.fir_number, c.case_title, c.police_station, c.district, c.state, c.crime_head, c.investigating_officer, c.badge_number, c.date_of_registration, c.status, c.priority);
   }
 
-  // 3. Seed Initial Evidence Records
-  const seedEvidences = [
-    {
-      id: "DOC-2026-00123",
-      case_id: "FIR-2026-001",
-      name: "Witness_Statement.pdf",
-      doc_type: "Statement",
-      size: "2.4 MB",
-      file_size_bytes: 2516582,
-      pages: 4,
-      status: "Verified",
-      is_sensitive: 1,
-      is_redacted: 1,
-      master_sha256: "a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be",
-      redacted_sha256: "8f4e2b01c9a7d34e65f12980145be8a3f5e7c9b2d4e6f8a2c41893341b8a9f31",
-      merkle_root: "9e5c4a3b2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c",
-      tx_id: "0x8f13c2d4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e6789e",
-      block_number: 129381,
-      signer: "SI Rajesh Kumar (Badge #CG-8401)",
-      signing_certificate: "Class 3 DSC - Rajesh Kumar (e-Mudhra CA)",
-      organization: "Chhattisgarh State Police",
-      storage_path: "storage/vault/Witness_Statement.enc",
-      description: "Sworn eye-witness testimony recorded under Section 180 BNSS (161 CrPC).",
-      created_by_id: "usr-io-001",
-      uploaded_on: "25 Sep 2026, 14:32:11 IST"
-    },
-    {
-      id: "DOC-2026-00120",
-      case_id: "FIR-2026-001",
-      name: "FIR_2026_001.pdf",
-      doc_type: "FIR",
-      size: "1.8 MB",
-      file_size_bytes: 1887436,
-      pages: 3,
-      status: "Verified",
-      is_sensitive: 0,
-      is_redacted: 0,
-      master_sha256: "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
-      redacted_sha256: null,
-      merkle_root: "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
-      tx_id: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b",
-      block_number: 128940,
-      signer: "Duty Officer SI M. Sinha",
-      signing_certificate: "Class 3 DSC - M. Sinha (NIC-CA)",
-      organization: "Chhattisgarh State Police",
-      storage_path: "storage/vault/FIR_2026_001.enc",
-      description: "Initial First Information Report lodged at Station.",
-      created_by_id: "usr-io-001",
-      uploaded_on: "12 Aug 2026, 14:48:00 IST"
-    },
-    {
-      id: "DOC-2026-00122",
-      case_id: "FIR-2026-001",
-      name: "Forensic_Report.pdf",
-      doc_type: "Report",
-      size: "5.1 MB",
-      file_size_bytes: 5347737,
-      pages: 12,
-      status: "Pending",
-      is_sensitive: 0,
-      is_redacted: 0,
-      master_sha256: "f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2",
-      redacted_sha256: null,
-      merkle_root: "f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2d3c4b5a6f1e2",
-      tx_id: "0x7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f",
-      block_number: 129105,
-      signer: "Dr. Meera Singh (FSL Raipur)",
-      signing_certificate: "Class 3 DSC - Meera Singh (NIC-CA)",
-      organization: "State Forensic Science Laboratory",
-      storage_path: "storage/vault/Forensic_Report.enc",
-      description: "Ballistics and chemical analysis report.",
-      created_by_id: "usr-fsl-002",
-      uploaded_on: "21 Aug 2026, 11:50:22 IST"
-    },
-    {
-      id: "DOC-2026-00121",
-      case_id: "FIR-2026-001",
-      name: "Seizure_Memo.pdf",
-      doc_type: "Evidence",
-      size: "3.2 MB",
-      file_size_bytes: 3355443,
-      pages: 2,
-      status: "Verified",
-      is_sensitive: 0,
-      is_redacted: 0,
-      master_sha256: "e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3",
-      redacted_sha256: null,
-      merkle_root: "e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3c2b1a0f9e4d3",
-      tx_id: "0x5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b",
-      block_number: 129012,
-      signer: "SI Rajesh Kumar",
-      signing_certificate: "Class 3 DSC - Rajesh Kumar (e-Mudhra CA)",
-      organization: "Chhattisgarh State Police",
-      storage_path: "storage/vault/Seizure_Memo.enc",
-      description: "Recovery of physical exhibit #EX-1 from crime scene.",
-      created_by_id: "usr-io-001",
-      uploaded_on: "15 Aug 2026, 16:35:10 IST"
-    }
-  ];
-
+  // 3. Seed Master Evidence Records (all 24 forensic exhibits)
   const insertEvidence = db.prepare(`
-    INSERT INTO evidence_records (id, case_id, name, doc_type, size, file_size_bytes, pages, status, is_sensitive, is_redacted, master_sha256, redacted_sha256, merkle_root, tx_id, block_number, signer, signing_certificate, organization, storage_path, description, created_by_id, uploaded_on)
+    INSERT OR REPLACE INTO evidence_records (id, case_id, name, doc_type, size, file_size_bytes, pages, status, is_sensitive, is_redacted, master_sha256, redacted_sha256, merkle_root, tx_id, block_number, signer, signing_certificate, organization, storage_path, description, created_by_id, uploaded_on)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
-  for (const e of seedEvidences) {
+  for (const e of SEED_EVIDENCE) {
     insertEvidence.run(e.id, e.case_id, e.name, e.doc_type, e.size, e.file_size_bytes, e.pages, e.status, e.is_sensitive, e.is_redacted, e.master_sha256, e.redacted_sha256, e.merkle_root, e.tx_id, e.block_number, e.signer, e.signing_certificate, e.organization, e.storage_path, e.description, e.created_by_id, e.uploaded_on);
   }
 
@@ -423,7 +251,7 @@ function seedDefaultData() {
   const seedCustody = [
     {
       id: "CUST-001",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Document Created",
       actor: "SI Rajesh Kumar (IO)",
       role: "Investigating Officer",
@@ -437,7 +265,7 @@ function seedDefaultData() {
     },
     {
       id: "CUST-002",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Digitally Signed",
       actor: "SI Rajesh Kumar",
       role: "Investigating Officer",
@@ -451,7 +279,7 @@ function seedDefaultData() {
     },
     {
       id: "CUST-003",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Anchored on Blockchain",
       actor: "Hyperledger Fabric Consortium",
       role: "Consortium Endorsement Peer",
@@ -465,7 +293,7 @@ function seedDefaultData() {
     },
     {
       id: "CUST-004",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Accessed by FSL",
       actor: "Dr. Meera Singh",
       role: "Forensic Analyst",
@@ -479,7 +307,7 @@ function seedDefaultData() {
     },
     {
       id: "CUST-005",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Accessed by Prosecutor",
       actor: "R. Varma",
       role: "Public Prosecutor",
@@ -493,7 +321,7 @@ function seedDefaultData() {
     },
     {
       id: "CUST-006",
-      evidence_id: "DOC-2026-00123",
+      evidence_id: "DOC-2026-00104",
       stage: "Viewed by Judge",
       actor: "Justice S. Iyer",
       role: "District & Sessions Judge",
@@ -508,7 +336,7 @@ function seedDefaultData() {
   ];
 
   const insertCustody = db.prepare(`
-    INSERT INTO custody_chain (id, evidence_id, stage, actor, role, organization, timestamp, location, details, verified, digital_signature, tx_id)
+    INSERT OR IGNORE INTO custody_chain (id, evidence_id, stage, actor, role, organization, timestamp, location, details, verified, digital_signature, tx_id)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
@@ -525,7 +353,7 @@ function seedDefaultData() {
       user_role: "District Judge",
       organization: "Sessions Court Raipur",
       action: "Document Verified",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Checked SHA-256 against ledger before bail hearing.",
       ip_address: "10.14.82.11",
@@ -538,7 +366,7 @@ function seedDefaultData() {
       user_role: "Public Prosecutor",
       organization: "Directorate of Prosecution",
       action: "Document Accessed",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Exported redacted case copy for committal.",
       ip_address: "10.14.82.45",
@@ -551,7 +379,7 @@ function seedDefaultData() {
       user_role: "Forensic Analyst",
       organization: "State Forensic Science Lab",
       action: "Document Accessed",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Cross-referenced witness timeline with ballistic timings.",
       ip_address: "10.12.44.19",
@@ -564,7 +392,7 @@ function seedDefaultData() {
       user_role: "Blockchain Peer",
       organization: "Hyperledger Consortium",
       action: "Archived to Blockchain",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Block #129381 committed across 3 endorsement organizations.",
       ip_address: "10.10.1.5",
@@ -577,7 +405,7 @@ function seedDefaultData() {
       user_role: "Investigating Officer",
       organization: "Chhattisgarh State Police",
       action: "Digitally Signed",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Signed with Class 3 DSC Hardware Token.",
       ip_address: "192.168.1.104",
@@ -590,7 +418,7 @@ function seedDefaultData() {
       user_role: "Investigating Officer",
       organization: "Chhattisgarh State Police",
       action: "Document Created",
-      document: "DOC-2026-00123",
+      document: "DOC-2026-00104",
       result: "Success",
       details: "Ingested via NyayaVault Offline Field Client.",
       ip_address: "192.168.1.104",
@@ -599,7 +427,7 @@ function seedDefaultData() {
   ];
 
   const insertAudit = db.prepare(`
-    INSERT INTO audit_trail (id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash)
+    INSERT OR IGNORE INTO audit_trail (id, timestamp, user, user_role, organization, action, document, result, details, ip_address, mac_hash)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 

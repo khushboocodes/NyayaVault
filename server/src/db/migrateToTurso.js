@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { SEED_CASES, SEED_EVIDENCE } from './evidenceDataset.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -174,43 +175,44 @@ async function migrate() {
     console.log('✅ Seeded 4 institutional users successfully!');
   }
 
-  // Seed Cases if empty
-  const caseRes = await client.execute('SELECT COUNT(*) as count FROM cases');
-  if (Number(caseRes.rows[0].count) === 0) {
-    console.log('🌱 Seeding initial FIR cases into Turso...');
-    const seedCases = [
-      ['FIR-2026-001', 'FIR-2026-001', 'Murder Investigation', 'Chhattisgarh Sadar', 'Raipur', 'Chhattisgarh', 'Section 103 BNS (Sec 302 IPC)', 'SI Rajesh Kumar', 'CG-8401', '12 Aug 2026, 14:45 IST', 'Active', 'High'],
-      ['FIR-2026-002', 'FIR-2026-002', 'Theft Case', 'Patna City', 'Patna', 'Bihar', 'Section 303 BNS (Sec 379 IPC)', 'Insp. Vikramaditya', 'BR-2204', '18 Aug 2026, 10:15 IST', 'Active', 'Normal'],
-      ['FIR-2026-003', 'FIR-2026-003', 'Cyber Fraud & Extortion', 'Gwalior Thana', 'Gwalior', 'Madhya Pradesh', 'Section 66D IT Act / Sec 318 BNS', 'SI Neha Verma', 'MP-5512', '25 Aug 2026, 16:20 IST', 'Pending', 'High'],
-      ['FIR-2026-004', 'FIR-2026-004', 'NDPS Seizure Operation', 'Gaya Kotwali', 'Gaya', 'Bihar', 'Section 20 NDPS Act', 'SI Rajesh Kumar', 'CG-8401', '02 Sep 2026, 09:30 IST', 'Active', 'Normal'],
-      ['FIR-2026-005', 'FIR-2026-005', 'Illegal Arms Recovery', 'Ranchi Sadar', 'Ranchi', 'Jharkhand', 'Section 25 Arms Act', 'Insp. S. Soren', 'JH-9011', '10 Sep 2026, 12:00 IST', 'Active', 'Normal']
-    ];
+  // Synchronize All 6 Master Cases
+  console.log('🌱 Synchronizing all 6 master cases into Turso Cloud...');
+  for (const c of SEED_CASES) {
+    await client.execute({
+      sql: `INSERT OR REPLACE INTO cases (id, fir_number, case_title, police_station, district, state, crime_head, investigating_officer, badge_number, date_of_registration, status, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [c.id, c.fir_number, c.case_title, c.police_station, c.district, c.state, c.crime_head, c.investigating_officer, c.badge_number, c.date_of_registration, c.status, c.priority]
+    });
+  }
+  console.log(`✅ Synchronized ${SEED_CASES.length} cases successfully in Turso!`);
 
-    for (const c of seedCases) {
+  // Synchronize All 24 Forensic Evidence Records
+  console.log('🌱 Synchronizing all 24 authentic forensic exhibits into Turso Cloud...');
+  for (const e of SEED_EVIDENCE) {
+    await client.execute({
+      sql: `INSERT OR REPLACE INTO evidence_records (id, case_id, name, doc_type, size, file_size_bytes, pages, status, is_sensitive, is_redacted, master_sha256, redacted_sha256, merkle_root, tx_id, block_number, signer, signing_certificate, organization, storage_path, description, uploaded_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [e.id, e.case_id, e.name, e.doc_type, e.size, e.file_size_bytes, e.pages, e.status, e.is_sensitive, e.is_redacted, e.master_sha256, e.redacted_sha256, e.merkle_root, e.tx_id, e.block_number, e.signer, e.signing_certificate, e.organization, e.storage_path, e.description, e.uploaded_on]
+    });
+  }
+  console.log(`✅ Synchronized ${SEED_EVIDENCE.length} forensic exhibits successfully in Turso!`);
+
+  // Synchronize Baseline Custody Chain for DOC-2026-00104 if needed
+  const custRes = await client.execute('SELECT COUNT(*) as count FROM custody_chain');
+  if (Number(custRes.rows[0].count) === 0) {
+    console.log('🌱 Seeding initial custody chain for DOC-2026-00104...');
+    const seedCustody = [
+      ['CUST-001', 'DOC-2026-00104', 'Document Created', 'SI Rajesh Kumar (IO)', 'Investigating Officer', 'Chhattisgarh State Police', '25 Sep 2026, 14:32 IST', 'Chhattisgarh Sadar Police Station', 'Witness statement recorded under Section 180 BNSS. Computed pre-ingestion SHA-256 hash.', 1, '0x3a4b5c...9a0b', '0x8f13c2...789e'],
+      ['CUST-002', 'DOC-2026-00104', 'Digitally Signed', 'SI Rajesh Kumar', 'Investigating Officer', 'Chhattisgarh State Police', '25 Sep 2026, 14:32 IST', 'Officer Terminal #4', 'Signed with Class 3 Digital Signature Certificate. Non-repudiation key registered with NIC-CA.', 1, '0x4b5c6d...0b1c', '0x8f13c2...789e'],
+      ['CUST-003', 'DOC-2026-00104', 'Anchored on Blockchain', 'Hyperledger Fabric Consortium', 'Consortium Endorsement Peer', 'NIC MeghRaj Cloud', '25 Sep 2026, 14:35 IST', 'Block #129381 (Tx: 0x8f13c2...789e)', 'Consensus achieved across Police, Judicial, and Forensic nodes with Raft BFT ordering.', 1, '0x5c6d7e...1c2d', '0x8f13c2...789e'],
+      ['CUST-004', 'DOC-2026-00104', 'Accessed by FSL', 'Dr. Meera Singh', 'Forensic Analyst', 'State Forensic Science Laboratory', '27 Sep 2026, 11:20 IST', 'Cyber Forensics Division, Raipur', 'Decrypted using role-delegated private key for ballistic consistency examination.', 1, '0x6d7e8f...2d3e', '0x8f13c2...789e'],
+      ['CUST-005', 'DOC-2026-00104', 'Accessed by Prosecutor', 'R. Varma', 'Public Prosecutor', 'Directorate of Prosecution', '28 Sep 2026, 09:45 IST', 'District Court Prosecution Office', 'Generated trial dossier. Downloaded Section 72 BNS redacted derivative copy.', 1, '0x7e8f9a...3e4f', '0x8f13c2...789e'],
+      ['CUST-006', 'DOC-2026-00104', 'Viewed by Judge', 'Justice S. Iyer', 'District & Sessions Judge', 'Sessions Court Room No. 3', '28 Sep 2026, 16:12 IST', 'Court Judicial Bench', 'Instant in-court cryptographic hash verification. Section 63 BSA certificate admitted.', 1, '0x8f9a0b...4f5a', '0x8f13c2...789e']
+    ];
+    for (const c of seedCustody) {
       await client.execute({
-        sql: `INSERT INTO cases (id, fir_number, case_title, police_station, district, state, crime_head, investigating_officer, badge_number, date_of_registration, status, priority) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT OR IGNORE INTO custody_chain (id, evidence_id, stage, actor, role, organization, timestamp, location, details, verified, digital_signature, tx_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: c
       });
     }
-    console.log('✅ Seeded 5 FIR cases successfully into Turso!');
-  }
-
-  // Seed Initial Evidence Records if empty
-  const docRes = await client.execute('SELECT COUNT(*) as count FROM evidence_records');
-  if (Number(docRes.rows[0].count) === 0) {
-    console.log('🌱 Seeding sample evidence records into Turso...');
-    const seedDocs = [
-      ['DOC-2026-00123', 'FIR-2026-001', 'Witness_Statement.pdf', 'Statement', '2.4 MB', 2516582, 4, 'Verified', 1, 1, 'a9f13b2c4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e672be', '8f4e2b01c9a7d34e65f12980145be8a3f5e7c9b2d4e6f8a2c41893341b8a9f31', '9e5c4a3b2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d1c0b9a8f7e6d5c', '0x8f13c2d4e6a614661a84f329910cde4b5f89102871134e12c8a91b2c4e6789e', 129381, 'SI Rajesh Kumar (Badge #CG-8401)', 'Class 3 DSC - Rajesh Kumar (e-Mudhra CA)', 'Chhattisgarh State Police', 'storage/vault/Witness_Statement.enc', 'Sworn eye-witness testimony recorded under Section 180 BNSS (161 CrPC).', '25 Sep 2026, 14:32:11 IST'],
-      ['DOC-2026-00120', 'FIR-2026-001', 'FIR_2026_001.pdf', 'FIR', '1.8 MB', 1887436, 3, 'Verified', 0, 0, 'c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4', null, '5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f', '0x7e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d7c6b5a4f3e2d', 129375, 'Insp. Arvind Shukla', 'Class 3 Judicial CA', 'Chhattisgarh State Police', 'storage/vault/FIR_2026_001.enc', 'First Information Report under Section 154 CrPC / 173 BNSS.', '12 Aug 2026, 14:48:00 IST']
-    ];
-
-    for (const d of seedDocs) {
-      await client.execute({
-        sql: `INSERT INTO evidence_records (id, case_id, name, doc_type, size, file_size_bytes, pages, status, is_sensitive, is_redacted, master_sha256, redacted_sha256, merkle_root, tx_id, block_number, signer, signing_certificate, organization, storage_path, description, uploaded_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: d
-      });
-    }
-    console.log('✅ Seeded initial evidence records successfully into Turso!');
   }
 
   console.log('🎉 Turso cloud database is 100% synchronized and ready for live production deployment!');
