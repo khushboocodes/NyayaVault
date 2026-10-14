@@ -50,7 +50,7 @@ export default function CaseDetailsPage({
     }
   }, [caseData?.firNumber]);
 
-  const caseDocs = documents.filter(d => d.caseId === caseData.firNumber);
+  const caseDocs = documents.filter(d => d.caseId === caseData.firNumber || d.caseId === caseData.id);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

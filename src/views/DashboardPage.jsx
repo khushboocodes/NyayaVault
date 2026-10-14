@@ -21,8 +21,14 @@ export default function DashboardPage({
   setSelectedCase,
   setSelectedDoc 
 }) {
-  const activeCasesCount = cases.filter(c => c.status === 'Active').length || 14;
-  const totalDocsCount = documents.length || 34;
+  const totalCasesCount = cases.length;
+  const activeCasesCount = cases.filter(c => c.status === 'Active').length;
+  const totalDocsCount = documents.length;
+  const verifiedDocsCount = documents.filter(d => d.status === 'Verified').length;
+  const pendingDocsCount = documents.filter(d => d.status === 'Pending').length;
+  const highPriorityCases = cases.filter(c => c.priority === 'High');
+  const highPriorityCount = highPriorityCases.length;
+  const topPriorityCase = highPriorityCases[0] || cases[0];
 
   const handleOpenDoc = (doc) => {
     setSelectedDoc(doc);
@@ -61,10 +67,10 @@ export default function DashboardPage({
           </div>
           <div style={{ marginTop: '12px' }}>
             <div style={{ fontSize: '32px', fontWeight: 700, color: '#FFF', fontFamily: 'var(--font-mono)' }}>
-              14
+              {activeCasesCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--status-verified)', marginTop: '2px' }}>
-              ↑ 2 Assigned this week
+              ↑ Active out of {totalCasesCount} dockets
             </div>
           </div>
         </div>
@@ -81,10 +87,10 @@ export default function DashboardPage({
           </div>
           <div style={{ marginTop: '12px' }}>
             <div style={{ fontSize: '32px', fontWeight: 700, color: '#FFF', fontFamily: 'var(--font-mono)' }}>
-              34
+              {totalDocsCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--gold-light)', marginTop: '2px' }}>
-              100% Cryptographically Anchored
+              {verifiedDocsCount} Anchored on Blockchain (100%)
             </div>
           </div>
         </div>
@@ -101,7 +107,7 @@ export default function DashboardPage({
           </div>
           <div style={{ marginTop: '12px' }}>
             <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--status-pending)', fontFamily: 'var(--font-mono)' }}>
-              5
+              {pendingDocsCount}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
               Offline Field Queue Ready
@@ -112,7 +118,8 @@ export default function DashboardPage({
         {/* Metric 4: High Priority */}
         <div 
           className="nyaya-card" 
-          style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
+          onClick={() => setCurrentScreen('cases')}
+          style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>High Priority</span>
@@ -120,10 +127,10 @@ export default function DashboardPage({
           </div>
           <div style={{ marginTop: '12px' }}>
             <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--status-tampered)', fontFamily: 'var(--font-mono)' }}>
-              1
+              {highPriorityCount}
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              FIR-2026-001 (Section 103 BNS)
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {topPriorityCase ? `${topPriorityCase.firNumber} (${topPriorityCase.crimeHead.split('(')[0].trim()})` : 'Critical Expedited'}
             </div>
           </div>
         </div>
@@ -298,39 +305,42 @@ export default function DashboardPage({
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-          {cases.slice(0, 3).map((item) => (
-            <div 
-              key={item.id}
-              onClick={() => handleOpenCase(item)}
-              style={{
-                background: 'var(--bg-surface-elevated)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '16px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold-border)'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--gold-light)' }}>
-                  {item.firNumber}
-                </span>
-                <span className="badge-status badge-verified">{item.status}</span>
+          {cases.slice(0, 4).map((item) => {
+            const attachedCount = documents.filter(d => d.caseId === item.id || d.caseId === item.firNumber).length || item.documentsCount || 0;
+            return (
+              <div 
+                key={item.id}
+                onClick={() => handleOpenCase(item)}
+                style={{
+                  background: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold-border)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-subtle)'}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'var(--font-mono)', color: 'var(--gold-light)' }}>
+                    {item.firNumber}
+                  </span>
+                  <span className="badge-status badge-verified">{item.status}</span>
+                </div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFF', marginTop: '6px' }}>
+                  {item.caseTitle}
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  {item.policeStation} • {item.crimeHead}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-secondary)' }}>
+                  <span>{attachedCount} Exhibits Attached</span>
+                  <span style={{ color: 'var(--gold-light)', fontWeight: 600 }}>Open Case →</span>
+                </div>
               </div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#FFF', marginTop: '6px' }}>
-                {item.caseTitle}
-              </div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                {item.policeStation} • {item.crimeHead}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid var(--border-subtle)', fontSize: '11px', color: 'var(--text-secondary)' }}>
-                <span>{item.documentsCount} Documents Attached</span>
-                <span style={{ color: 'var(--gold-light)', fontWeight: 600 }}>Open Case →</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

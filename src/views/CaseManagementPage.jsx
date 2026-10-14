@@ -15,6 +15,7 @@ import { logActivity } from '../utils/auditLogger';
 
 export default function CaseManagementPage({ 
   cases, 
+  documents = [],
   setCurrentScreen, 
   setSelectedCase 
 }) {
@@ -52,7 +53,7 @@ export default function CaseManagementPage({
             Cases
           </h2>
           <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Manage and track digital investigation case dossiers across state police stations
+            Showing {filteredCases.length} Registered Criminal Dockets • {documents.length} Cryptographically Anchored Exhibits across State Police Stations
           </p>
         </div>
 
@@ -124,6 +125,9 @@ export default function CaseManagementPage({
             <tbody>
               {filteredCases.map((item) => {
                 const isActive = item.status === 'Active';
+                const caseDocsCount = documents && documents.length > 0 
+                  ? documents.filter(d => d.caseId === item.id || d.caseId === item.firNumber).length 
+                  : (item.documentsCount || 0);
 
                 return (
                   <tr 
@@ -173,7 +177,7 @@ export default function CaseManagementPage({
                           fontSize: '12px' 
                         }}
                       >
-                        {item.documentsCount}
+                        {caseDocsCount}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>

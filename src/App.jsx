@@ -421,6 +421,7 @@ export default function App() {
               {currentScreen === 'cases' && (
                 <CaseManagementPage 
                   cases={cases}
+                  documents={documents}
                   setCurrentScreen={navigateToScreen}
                   setSelectedCase={setSelectedCase}
                 />
