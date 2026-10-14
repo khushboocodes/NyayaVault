@@ -99,6 +99,9 @@ export const api = {
     log: (auditData) => request('/audit/log', {
       method: 'POST',
       body: JSON.stringify(auditData)
+    }),
+    deleteLog: (id) => request(`/audit/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
     })
   }
 };

@@ -14,7 +14,8 @@ import {
   FolderLock,
   GitBranch,
   AlertTriangle,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import { INITIAL_AUDIT_TRAIL } from '../data/mockData';
 import { api } from '../api';
@@ -29,13 +30,50 @@ export default function AuditTrailPage({ setCurrentScreen }) {
     setIsRefreshing(true);
     try {
       const res = await api.audit.getTrail();
-      if (res?.auditTrail && res.auditTrail.length > 0) {
-        setLogs(res.auditTrail);
+      let serverLogs = (res?.auditTrail && res.auditTrail.length > 0) ? res.auditTrail : [];
+
+      // Merge with browser localStorage cache for high availability
+      let localCache = [];
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          localCache = JSON.parse(localStorage.getItem('nyayavault_local_audit_cache') || '[]');
+        } catch (e) {}
+      }
+
+      const map = new Map();
+      serverLogs.forEach(l => map.set(l.id, l));
+      localCache.forEach(l => {
+        if (!map.has(l.id)) map.set(l.id, l);
+      });
+
+      const merged = Array.from(map.values());
+      if (merged.length > 0) {
+        setLogs(merged);
       }
     } catch (err) {
       console.warn('Live audit trail fetch fallback:', err.message);
     } finally {
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteLog = async (id, e) => {
+    e.stopPropagation();
+    if (!id) return;
+    if (!window.confirm(`Are you sure you want to delete audit entry '${id}' from the database?`)) {
+      return;
+    }
+    try {
+      await api.audit.deleteLog(id);
+      setLogs(prev => prev.filter(l => l.id !== id));
+      if (typeof window !== 'undefined' && window.localStorage) {
+        try {
+          const cached = JSON.parse(localStorage.getItem('nyayavault_local_audit_cache') || '[]');
+          localStorage.setItem('nyayavault_local_audit_cache', JSON.stringify(cached.filter(c => c.id !== id)));
+        } catch (err) {}
+      }
+    } catch (err) {
+      alert('Failed to delete log: ' + err.message);
     }
   };
 
@@ -333,16 +371,36 @@ export default function AuditTrailPage({ setCurrentScreen }) {
                         </div>
                       </td>
 
-                      {/* Result */}
-                      <td style={{ textAlign: 'right' }}>
-                        <span className={`badge-status ${isAlert ? 'badge-pending' : 'badge-verified'}`} style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          {isAlert ? (
-                            <AlertTriangle size={11} />
-                          ) : (
-                            <CheckCircle2 size={11} />
-                          )}
-                          {log.result || 'Success'}
-                        </span>
+                      {/* Result & Actions */}
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                          <span className={`badge-status ${isAlert ? 'badge-pending' : 'badge-verified'}`} style={{ fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            {isAlert ? (
+                              <AlertTriangle size={11} />
+                            ) : (
+                              <CheckCircle2 size={11} />
+                            )}
+                            {log.result || 'Success'}
+                          </span>
+                          <button
+                            onClick={(e) => handleDeleteLog(log.id, e)}
+                            style={{
+                              background: 'rgba(239, 68, 68, 0.1)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              color: '#EF4444',
+                              borderRadius: '4px',
+                              padding: '4px 6px',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s ease'
+                            }}
+                            title={`Delete log ${log.id || ''} from database`}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

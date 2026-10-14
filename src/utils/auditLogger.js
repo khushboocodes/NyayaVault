@@ -84,11 +84,27 @@ export async function logActivity({
 
   try {
     const res = await api.audit.log(payload);
+    const recordedLog = res?.audit || {
+      ...payload,
+      id: `AUD-${Date.now().toString().slice(-5)}`,
+      timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+    };
+
+    // Mirror to browser localStorage for offline & restart resilience
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        const cached = JSON.parse(localStorage.getItem('nyayavault_local_audit_cache') || '[]');
+        const updated = [recordedLog, ...cached.filter(c => c.id !== recordedLog.id)].slice(0, 100);
+        localStorage.setItem('nyayavault_local_audit_cache', JSON.stringify(updated));
+      } catch (e) {
+        // Ignore localStorage quota warnings
+      }
+    }
 
     // Notify listeners (e.g. AuditTrailPage) to update live in real-time
     if (typeof window !== 'undefined' && window.dispatchEvent) {
       window.dispatchEvent(new CustomEvent('nyayavault_audit_logged', {
-        detail: res?.audit || payload
+        detail: recordedLog
       }));
     }
     return res;
