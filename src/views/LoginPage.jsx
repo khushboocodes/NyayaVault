@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Lock, 
   Eye, 
@@ -7,7 +7,9 @@ import {
   Microscope,
   Scale, 
   Check, 
-  AlertCircle 
+  AlertCircle,
+  Loader2,
+  CheckCircle2
 } from 'lucide-react';
 import { ROLES, DEFAULT_ROLE } from '../data/rolesData';
 import AshokaLogo from '../components/AshokaLogo';
@@ -21,6 +23,14 @@ const ROLE_ICONS = {
   judge: Scale
 };
 
+// Official officer identities for access granted state confirmation (matches CyberCrash prototype pattern)
+const ROLE_OFFICER_NAMES = {
+  io: 'Sub-Insp. Rajesh Kumar (IO)',
+  fsl: 'Dr. Meera Singh (FSL)',
+  prosecutor: 'Adv. R. Varma (Prosecutor)',
+  judge: 'Justice S. Iyer (Judge)'
+};
+
 export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onLogin }) {
   // Find initial role matching current userRole or default to IO
   const initialRole = ROLES.find(r => r.id === userRole?.id) || DEFAULT_ROLE;
@@ -30,10 +40,22 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
   const [password, setPassword] = useState(initialRole.defaultPassword || 'password123');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
+  
+  // Rolling Animation & Verification state: 'idle' | 'verifying' | 'granted'
+  const [authState, setAuthState] = useState('idle');
+  const timersRef = useRef([]);
+
+  // Clean up any pending transition timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(timerId => clearTimeout(timerId));
+    };
+  }, []);
 
   // Handle role selection (Only ONE role can be selected at a time)
   // When user selects a role, automatically populate the corresponding prototype username
   const handleRoleSelect = (roleId) => {
+    if (authState !== 'idle') return;
     setSelectedRoleId(roleId);
     const matchedRole = ROLES.find(r => r.id === roleId);
     if (matchedRole) {
@@ -47,6 +69,7 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
 
   const handleSignIn = (e) => {
     e.preventDefault();
+    if (authState !== 'idle') return;
     setValidationError('');
 
     // Validation
@@ -64,18 +87,28 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
     }
 
     const selectedRoleObj = ROLES.find(r => r.id === selectedRoleId) || DEFAULT_ROLE;
-    
-    // Store selected role in authenticated state
-    if (setUserRole) {
-      setUserRole(selectedRoleObj);
-    }
 
-    // DIRECT AUTHENTICATION: Direct to role-specific dashboard (No TFA/MFA/OTP screen)
-    if (onLogin) {
-      onLogin(selectedRoleObj);
-    } else {
-      setCurrentScreen('dashboard');
-    }
+    // STEP 1: Rolling Verification (Photo 1 - Verifying Gov-Net RBAC Credentials...)
+    setAuthState('verifying');
+
+    const t1 = setTimeout(() => {
+      // STEP 2: Access Granted Confirmation (Photo 2 - Access Granted: Officer (Role))
+      setAuthState('granted');
+
+      const t2 = setTimeout(() => {
+        // STEP 3: Complete Authentication & Redirect to Dashboard
+        if (setUserRole) {
+          setUserRole(selectedRoleObj);
+        }
+        if (onLogin) {
+          onLogin(selectedRoleObj);
+        } else {
+          setCurrentScreen('dashboard');
+        }
+      }, 800);
+      timersRef.current.push(t2);
+    }, 1300);
+    timersRef.current.push(t1);
   };
 
   return (
@@ -157,6 +190,7 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
                   onChange={e => setUserId(e.target.value)}
                   className="login-right-input"
                   placeholder="Enter official user ID"
+                  disabled={authState !== 'idle'}
                   required
                 />
               </div>
@@ -175,12 +209,14 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
                   onChange={e => setPassword(e.target.value)}
                   className="login-right-input"
                   placeholder="Enter your security password"
+                  disabled={authState !== 'idle'}
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="login-input-right-btn"
+                  disabled={authState !== 'idle'}
                   title={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -188,12 +224,27 @@ export default function LoginPage({ setCurrentScreen, setUserRole, userRole, onL
               </div>
             </div>
 
-            {/* Primary Login Button: Authenticate & Access Dashboard → */}
+            {/* Primary Login Button: Dynamic State (Idle / Verifying / Granted) */}
             <button 
               type="submit" 
-              className="login-right-btn-primary"
+              disabled={authState !== 'idle'}
+              className={`login-right-btn-primary ${authState === 'verifying' ? 'verifying' : ''} ${authState === 'granted' ? 'granted' : ''}`}
             >
-              Authenticate & Access Dashboard →
+              {authState === 'verifying' && (
+                <>
+                  <Loader2 size={16} className="login-btn-spinner-rolling" />
+                  <span>Verifying Gov-Net RBAC Credentials...</span>
+                </>
+              )}
+              {authState === 'granted' && (
+                <>
+                  <CheckCircle2 size={16} className="login-btn-check-icon" />
+                  <span>Access Granted: {ROLE_OFFICER_NAMES[selectedRoleId] || 'Authorized Officer'}</span>
+                </>
+              )}
+              {authState === 'idle' && (
+                <span>Authenticate & Access Dashboard →</span>
+              )}
             </button>
 
             {/* ===================================================================

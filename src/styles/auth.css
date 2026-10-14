@@ -388,18 +388,100 @@
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 0 3px 14px rgba(184, 139, 42, 0.35);
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   margin-top: 6px;
+  user-select: none;
 }
 
-.login-right-btn-primary:hover {
+.login-right-btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #E0BA4A 0%, #C59835 100%);
   transform: translateY(-1px);
   box-shadow: 0 5px 20px rgba(184, 139, 42, 0.5);
 }
+
+.login-right-btn-primary:disabled {
+  cursor: not-allowed;
+}
+
+/* Rolling Verification State (Photo 1) */
+.login-right-btn-primary.verifying {
+  background: linear-gradient(90deg, #E11D48 0%, #7C3AED 50%, #2563EB 100%);
+  background-size: 200% 100%;
+  animation: buttonGradientShift 1.8s ease infinite;
+  color: #FFFFFF;
+  cursor: wait;
+  box-shadow: 0 4px 18px rgba(225, 29, 72, 0.4);
+  transform: none;
+}
+
+/* Access Granted State (Photo 2) */
+.login-right-btn-primary.granted {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border: 1px solid #34D399;
+  color: #FFFFFF;
+  cursor: default;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45);
+  animation: buttonPopGranted 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes buttonGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes buttonPopGranted {
+  0% {
+    transform: scale(0.97);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.login-btn-spinner-rolling {
+  animation: spinRolling 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spinRolling {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.login-btn-check-icon {
+  animation: checkPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  flex-shrink: 0;
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 
 .login-demo-password-hint {
   font-size: 10px;
