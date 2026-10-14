@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { api } from '../api';
 import { logActivity } from '../utils/auditLogger';
+import { getDocumentDossierContent } from '../data/dossierContentMap';
 
 export default function DocumentViewerPage({ 
   selectedDoc, 
@@ -206,143 +207,8 @@ export default function DocumentViewerPage({
               minHeight: '440px'
             }}
           >
-            {/* Dynamic Legal Document Content */}
-            {(() => {
-              const docType = (doc.type || '').toUpperCase();
-              const isSensitive = doc.isSensitive;
-
-              if (docType === 'FIR') {
-                return (
-                  <div>
-                    <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '1px solid #DCD4C4', paddingBottom: '10px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.04em' }}>
-                        STATE POLICE DEPARTMENT • STATE CRIME DOCKET
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--parchment-muted)' }}>
-                        FORM NO. II — FIRST INFORMATION REPORT (UNDER SECTION 173 BNSS / 154 CrPC)
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px', fontSize: '12px', background: 'rgba(0,0,0,0.03)', padding: '10px', borderRadius: '4px' }}>
-                      <div><strong>FIR Number:</strong> {doc.caseId}</div>
-                      <div><strong>Registration Date:</strong> {doc.uploadedOn || '12 Aug 2026, 14:48 IST'}</div>
-                      <div><strong>Police Station:</strong> {doc.organization || 'State Police Thana'}</div>
-                      <div><strong>Crime Classification:</strong> {doc.caseTitle || 'Special Offense'}</div>
-                    </div>
-
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>1. Act & Applicable Statutory Sections:</strong> Bharatiya Nyaya Sanhita (BNS 2023) / Bharatiya Nagarik Suraksha Sanhita (BNSS).
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>2. Occurrence of Offense:</strong> Reported within station territorial limits. General Diary Entry #88/26 certified and anchored.
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>3. Gist of First Information:</strong> {doc.description || 'Information lodged by authorized officer regarding cognizable offense. Immediate inquiry initiated with electronic chain of custody.'}
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>4. Action Taken:</strong> Case docket registered. Investigating Officer nominated with DSC digital signature and Hyperledger Fabric block anchoring.
-                    </p>
-                  </div>
-                );
-              }
-
-              if (docType === 'REPORT') {
-                return (
-                  <div>
-                    <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '1px solid #DCD4C4', paddingBottom: '10px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.04em' }}>
-                        STATE FORENSIC SCIENCE LABORATORY (SFSL)
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--parchment-muted)' }}>
-                        MEDICO-LEGAL & SCIENTIFIC EXAMINATION DOSSIER (SEC 39(1) BSA 2023)
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px', fontSize: '12px', background: 'rgba(0,0,0,0.03)', padding: '10px', borderRadius: '4px' }}>
-                      <div><strong>Exhibit Reference:</strong> {doc.id}</div>
-                      <div><strong>Case Dossier:</strong> {doc.caseId}</div>
-                      <div><strong>Laboratory Docket:</strong> FSL-BIO-EX-992</div>
-                      <div><strong>Condition of Seals:</strong> Intact & Matches Police Seal Impress</div>
-                    </div>
-
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>1. Description of Received Parcells:</strong> Tamper-evident high-security evidence bag containing physical/digital exhibits submitted under official escort.
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>2. Scientific Methodology:</strong> {doc.description || 'Microscopic, chromatographic, and cryptographic hashing analysis performed in strict compliance with ISO/IEC 17025 forensic standards.'}
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>3. Analytical Results:</strong> Quantitative assays confirm exact specimen match. Digital checksum verified against distributed ledger state with zero bit-level tampering.
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>4. Forensic Expert Opinion:</strong> The examined exhibit provides conclusive evidentiary correlation with the crime docket under Section 39 BSA.
-                    </p>
-                  </div>
-                );
-              }
-
-              if (docType === 'EVIDENCE') {
-                return (
-                  <div>
-                    <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '1px solid #DCD4C4', paddingBottom: '10px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.04em' }}>
-                        EVIDENCE SEIZURE MEMO & PANCHNAMA
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--parchment-muted)' }}>
-                        INSPECTION & SEIZURE PROCEEDINGS UNDER SECTION 105 BNSS (SEC 102 CrPC)
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px', fontSize: '12px', background: 'rgba(0,0,0,0.03)', padding: '10px', borderRadius: '4px' }}>
-                      <div><strong>Seizure Memo No:</strong> {doc.id}</div>
-                      <div><strong>Case FIR:</strong> {doc.caseId}</div>
-                      <div><strong>Date & Time of Recovery:</strong> {doc.uploadedOn || '15 Aug 2026, 16:35 IST'}</div>
-                      <div><strong>Panch Witnesses:</strong> 2 Independent Citizens Present</div>
-                    </div>
-
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>1. Place of Recovery:</strong> Spot inspection carried out in presence of panchas at the crime locus in jurisdiction of {doc.organization || 'District Police'}.
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>2. Inventory of Seized Articles:</strong> {doc.description || 'Exhibit #EX-1 securely seized, labeled, and marked in presence of independent witnesses with electronic barcode.'}
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>3. Electronic Signature & Sealing:</strong> Articles packed into barcoded tamper-evident evidence envelope. Specimen seal impress affixed and hash anchored on Hyperledger Fabric.
-                    </p>
-                    <p style={{ marginBottom: '10px', lineHeight: 1.6 }}>
-                      <strong>4. Panchnama Attestation:</strong> Read over and admitted as correct by Panch-1 and Panch-2 before the undersigned Investigating Officer.
-                    </p>
-                  </div>
-                );
-              }
-
-              // Default: Sworn Witness / Deposition Statement
-              return (
-                <div>
-                  <div style={{ textAlign: 'center', marginBottom: '18px', borderBottom: '1px solid #DCD4C4', paddingBottom: '10px' }}>
-                    <div style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.04em' }}>
-                      POLICE DEPARTMENT • STATEMENT OF WITNESS
-                    </div>
-                    <div style={{ fontSize: '12px', color: 'var(--parchment-muted)' }}>
-                      FORM NO. 14 — STATEMENT RECORDED UNDER SEC 180 BNSS (161 CrPC)
-                    </div>
-                  </div>
-
-                  <p style={{ marginBottom: '12px' }}>
-                    <strong>Police Station:</strong> Sadar Thana &nbsp;|&nbsp; <strong>Case Docket:</strong> {doc.caseId} &nbsp;|&nbsp; <strong>Exhibit:</strong> {doc.id}
-                  </p>
-
-                  <p style={{ marginBottom: '12px', lineHeight: 1.7 }}>
-                    Statement of witness {isSensitive ? <span className="redaction-bar">Kalyani Devi</span> : 'Kalyani Devi'}, resident of {isSensitive ? <span className="redaction-bar">Ward 4, Rampur</span> : 'Ward 4, Rampur'}, recorded on {doc.uploadedOn || '24th September 2026'}.
-                    &nbsp;{doc.description || 'The deponent states that on the night of the incident, she observed the incident unfold near the locus of the crime.'}
-                  </p>
-
-                  <p style={{ marginBottom: '12px', lineHeight: 1.7 }}>
-                    The deponent identified crucial corroborating factors. Record encrypted with Section 72 BNS sensitive privacy redaction protocols.
-                  </p>
-                </div>
-              );
-            })()}
+            {/* Dynamic Authentic Legal Document Dossier */}
+            {getDocumentDossierContent(doc)}
 
             <div style={{ marginTop: '36px', paddingTop: '16px', borderTop: '1px dashed #DCD4C4', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
               <div>
